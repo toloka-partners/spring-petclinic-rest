@@ -12,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
  * @see AbstractClinicServiceTests AbstractClinicServiceTests for more details. </p>
  */
 
-@SpringBootTest
+@SpringBootTest(properties = {"spring.cache.type=none"})
 @ActiveProfiles({"spring-data-jpa", "hsqldb"})
 class ClinicServiceSpringDataJpaTests extends AbstractClinicServiceTests {
 
