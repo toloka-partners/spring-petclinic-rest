@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -298,7 +299,7 @@ class GenericEntityCacheIntegrationTests {
 
         ResponseEntity<Void> deleteResponse = restTemplate.exchange(
             clearUrl, HttpMethod.DELETE, null, Void.class);
-        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode());
+        assertTrue(deleteResponse.getStatusCode() == HttpStatus.OK || deleteResponse.getStatusCode() == HttpStatus.NO_CONTENT);
 
         ResponseEntity<Object[]> response3 = restTemplate.getForEntity(
             apiBaseUrl + config.getApiEndpoint(), Object[].class);

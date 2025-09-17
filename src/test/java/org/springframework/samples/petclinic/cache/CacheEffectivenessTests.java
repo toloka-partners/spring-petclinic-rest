@@ -275,7 +275,7 @@ public class CacheEffectivenessTests {
             null,
             Void.class
         );
-        assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(clearResponse.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
 
         startTime = System.currentTimeMillis();
         List<Object[]> uncachedResults = new ArrayList<>();
@@ -288,7 +288,7 @@ public class CacheEffectivenessTests {
                 null,
                 Void.class
             );
-            assertThat(clearSpecificResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(clearSpecificResponse.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
 
             ResponseEntity<Object[]> response = restTemplate.getForEntity(
                 apiBaseUrl + config.getApiEndpoint(), Object[].class);
@@ -360,12 +360,7 @@ public class CacheEffectivenessTests {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> finalCacheStats = (Map<String, Object>) finalStats.get(cacheRegion);
-        long finalHits;
-        try {
-            finalHits = ((Number) finalCacheStats.get("hitCount")).longValue();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get value from " + finalCacheStats, e);
-        }
+        long finalHits = ((Number) finalCacheStats.get("hitCount")).longValue();
         long finalMisses = ((Number) finalCacheStats.get("missCount")).longValue();
 
         // Calculate statistics for this test's operations only

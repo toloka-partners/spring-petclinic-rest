@@ -40,13 +40,13 @@ public class CacheRestController {
     @DeleteMapping("/clear")
     public ResponseEntity<Void> clearAllCaches() {
         cacheStatsCollector.clearAllCaches();
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/clear/{cacheName}")
     public ResponseEntity<Void> clearCache(@PathVariable String cacheName) {
         cacheStatsCollector.clearCache(cacheName);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
     
     public static class CacheStatsDto {

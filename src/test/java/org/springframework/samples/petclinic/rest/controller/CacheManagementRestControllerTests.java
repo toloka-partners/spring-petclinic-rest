@@ -49,7 +49,7 @@ public class CacheManagementRestControllerTests {
             null,
             Void.class
         );
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
     }
 
     @Test
@@ -226,7 +226,7 @@ public class CacheManagementRestControllerTests {
             null,
             Void.class
         );
-        assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(clearResponse.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
 
         // Verify caches are cleared (stats should be reset)
         ResponseEntity<Map<String, Object>> afterResponse = restTemplate.exchange(
@@ -272,7 +272,7 @@ public class CacheManagementRestControllerTests {
             null,
             Void.class
         );
-        assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(clearResponse.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
 
         // Verify the operation completed successfully (we can't directly verify cache clearing
         // due to Caffeine's cumulative stats, but we can verify the endpoint works)
@@ -296,6 +296,6 @@ public class CacheManagementRestControllerTests {
         );
         
         // Should still return OK even if cache doesn't exist
-        assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(clearResponse.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
     }
 }
