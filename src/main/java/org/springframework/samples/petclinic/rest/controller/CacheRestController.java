@@ -29,14 +29,8 @@ public class CacheRestController {
         
         stats.forEach((name, cacheStats) -> {
             CacheStatsDto dto = new CacheStatsDto();
-            dto.setHits(cacheStats.hitCount());
-            dto.setMisses(cacheStats.missCount());
-            dto.setHitRate(cacheStats.hitRate());
-            dto.setEvictionCount(cacheStats.evictionCount());
-            dto.setLoadSuccessCount(cacheStats.loadSuccessCount());
-            dto.setLoadFailureCount(cacheStats.loadFailureCount());
-            dto.setTotalLoadTime(cacheStats.totalLoadTime());
-            dto.setAverageLoadPenalty(cacheStats.averageLoadPenalty());
+            dto.setHitCount(cacheStats.hitCount());
+            dto.setMissCount(cacheStats.missCount());
             response.put(name, dto);
         });
         
@@ -46,87 +40,33 @@ public class CacheRestController {
     @DeleteMapping("/clear")
     public ResponseEntity<Void> clearAllCaches() {
         cacheStatsCollector.clearAllCaches();
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/clear/{cacheName}")
     public ResponseEntity<Void> clearCache(@PathVariable String cacheName) {
         cacheStatsCollector.clearCache(cacheName);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
     
     public static class CacheStatsDto {
-        private long hits;
-        private long misses;
-        private double hitRate;
-        private long evictionCount;
-        private long loadSuccessCount;
-        private long loadFailureCount;
-        private long totalLoadTime;
-        private double averageLoadPenalty;
+        private long hitCount;
+        private long missCount;
 
-        public long getHits() {
-            return hits;
+        public long getHitCount() {
+            return hitCount;
         }
 
-        public void setHits(long hits) {
-            this.hits = hits;
+        public void setHitCount(long hitCount) {
+            this.hitCount = hitCount;
         }
 
-        public long getMisses() {
-            return misses;
+        public long getMissCount() {
+            return missCount;
         }
 
-        public void setMisses(long misses) {
-            this.misses = misses;
-        }
-
-        public double getHitRate() {
-            return hitRate;
-        }
-
-        public void setHitRate(double hitRate) {
-            this.hitRate = hitRate;
-        }
-
-        public long getEvictionCount() {
-            return evictionCount;
-        }
-
-        public void setEvictionCount(long evictionCount) {
-            this.evictionCount = evictionCount;
-        }
-
-        public long getLoadSuccessCount() {
-            return loadSuccessCount;
-        }
-
-        public void setLoadSuccessCount(long loadSuccessCount) {
-            this.loadSuccessCount = loadSuccessCount;
-        }
-
-        public long getLoadFailureCount() {
-            return loadFailureCount;
-        }
-
-        public void setLoadFailureCount(long loadFailureCount) {
-            this.loadFailureCount = loadFailureCount;
-        }
-
-        public long getTotalLoadTime() {
-            return totalLoadTime;
-        }
-
-        public void setTotalLoadTime(long totalLoadTime) {
-            this.totalLoadTime = totalLoadTime;
-        }
-
-        public double getAverageLoadPenalty() {
-            return averageLoadPenalty;
-        }
-
-        public void setAverageLoadPenalty(double averageLoadPenalty) {
-            this.averageLoadPenalty = averageLoadPenalty;
+        public void setMissCount(long missCount) {
+            this.missCount = missCount;
         }
     }
 }

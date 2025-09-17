@@ -360,7 +360,12 @@ public class CacheEffectivenessTests {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> finalCacheStats = (Map<String, Object>) finalStats.get(cacheRegion);
-        long finalHits = ((Number) finalCacheStats.get("hitCount")).longValue();
+        long finalHits;
+        try {
+            finalHits = ((Number) finalCacheStats.get("hitCount")).longValue();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get value from " + finalCacheStats, e);
+        }
         long finalMisses = ((Number) finalCacheStats.get("missCount")).longValue();
 
         // Calculate statistics for this test's operations only
