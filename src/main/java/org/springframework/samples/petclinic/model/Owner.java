@@ -23,6 +23,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.*;
 
@@ -36,6 +37,7 @@ import java.util.*;
  */
 @Entity
 @Table(name = "owners")
+@NamedEntityGraph(name = "Owner.pets", attributeNodes = @NamedAttributeNode("pets"))
 public class Owner extends Person {
     @Column(name = "address")
     @NotEmpty
@@ -51,7 +53,8 @@ public class Owner extends Person {
     @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be exactly 10 digits")
     private String telephone;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner", fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner", fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     private Set<Pet> pets;
 
     public String getAddress() {
