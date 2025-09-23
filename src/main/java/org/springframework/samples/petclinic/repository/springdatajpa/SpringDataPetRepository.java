@@ -38,4 +38,8 @@ public interface SpringDataPetRepository extends PetRepository, Repository<Pet, 
     @Override
     @Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
     List<PetType> findPetTypes() throws DataAccessException;
+    
+    @Override
+    @Query("SELECT DISTINCT pet FROM Pet pet left join fetch pet.visits")
+    List<Pet> findAll() throws DataAccessException;
 }
