@@ -140,6 +140,7 @@ public class OwnerRestController implements OwnersApi {
         owner.setId(ownerId);
         pet.setOwner(owner);
         pet.getType().setName(null);
+        pet.setWeight(petFieldsDto.getWeight());
         this.clinicService.savePet(pet);
         PetDto petDto = petMapper.toPetDto(pet);
         headers.setLocation(UriComponentsBuilder.newInstance().path("/api/pets/{id}")
@@ -156,7 +157,10 @@ public class OwnerRestController implements OwnersApi {
             if (currentPet != null) {
                 currentPet.setBirthDate(petFieldsDto.getBirthDate());
                 currentPet.setName(petFieldsDto.getName());
-                currentPet.setType(petMapper.toPetType(petFieldsDto.getType()));
+                if (petFieldsDto.getType() != null) {
+                    currentPet.setType(petMapper.toPetType(petFieldsDto.getType()));
+                }
+                currentPet.setWeight(petFieldsDto.getWeight());
                 this.clinicService.savePet(currentPet);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
