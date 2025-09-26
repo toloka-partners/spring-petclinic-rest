@@ -80,5 +80,14 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
 	public void delete(Visit visit) throws DataAccessException {
         this.em.remove(this.em.contains(visit) ? visit : this.em.merge(visit));
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Collection<Visit> findAllWithPet() throws DataAccessException {
+		return this.em.createQuery(
+			"SELECT DISTINCT v FROM Visit v LEFT JOIN FETCH v.pet p " +
+			"LEFT JOIN FETCH p.type LEFT JOIN FETCH p.owner")
+			.getResultList();
+	}
 
 }

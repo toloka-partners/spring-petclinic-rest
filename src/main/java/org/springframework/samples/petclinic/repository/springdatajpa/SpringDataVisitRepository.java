@@ -16,9 +16,12 @@
 package org.springframework.samples.petclinic.repository.springdatajpa;
 
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.repository.VisitRepository;
+
+import java.util.Collection;
 
 /**
  * Spring Data JPA specialization of the {@link VisitRepository} interface
@@ -29,4 +32,8 @@ import org.springframework.samples.petclinic.repository.VisitRepository;
 
 @Profile("spring-data-jpa")
 public interface SpringDataVisitRepository extends VisitRepository, Repository<Visit, Integer>, VisitRepositoryOverride {
+    
+    @Override
+    @Query("SELECT DISTINCT v FROM Visit v LEFT JOIN FETCH v.pet p LEFT JOIN FETCH p.type LEFT JOIN FETCH p.owner")
+    Collection<Visit> findAllWithPet();
 }
