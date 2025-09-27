@@ -95,14 +95,14 @@ class PetRestControllerTests {
             .name("Rosy")
             .birthDate(LocalDate.now())
             .type(petType)
-            .weight(15.75));
+            .weight(25.0));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
             .type(petType)
-            .weight(8.5));
+            .weight(null));
     }
 
     @Test
@@ -115,7 +115,7 @@ class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
             .andExpect(jsonPath("$.name").value("Rosy"))
-            .andExpect(jsonPath("$.weight").value(15.75));
+            .andExpect(jsonPath("$.weight").value(25.0));
     }
 
     @Test
@@ -140,10 +140,10 @@ class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
-            .andExpect(jsonPath("$.[0].weight").value(15.75))
+            .andExpect(jsonPath("$.[0].weight").value(25.0))
             .andExpect(jsonPath("$.[1].id").value(4))
             .andExpect(jsonPath("$.[1].name").value("Jewel"))
-            .andExpect(jsonPath("$.[1].weight").value(8.5));
+            .andExpect(jsonPath("$.[1].weight").doesNotExist());
     }
 
     @Test
@@ -162,7 +162,6 @@ class PetRestControllerTests {
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         PetDto newPet = pets.get(0);
         newPet.setName("Rosy I");
-        newPet.setWeight(16.25);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -179,8 +178,7 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy I"))
-            .andExpect(jsonPath("$.weight").value(16.25));
+            .andExpect(jsonPath("$.name").value("Rosy I"));
 
     }
 
@@ -224,6 +222,96 @@ class PetRestControllerTests {
         this.mockMvc.perform(delete("/api/pets/999")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNotFound());
+    }
+
+    // ========== Weight Field Tests ==========
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetPetWithNullWeight() throws Exception {
+        given(this.clinicService.findPetById(4)).willReturn(petMapper.toPet(pets.get(1)));
+        this.mockMvc.perform(get("/api/pets/4")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(4))
+            .andExpect(jsonPath("$.name").value("Jewel"))
+            .andExpect(jsonPath("$.weight").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWithWeight() throws Exception {
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setWeight(30.5);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+        this.mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isNoContent());
+
+        // Verify the weight was updated
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.weight").value(30.5));
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWithNullWeight() throws Exception {
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setWeight(null);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+        this.mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isNoContent());
+
+        // Verify the weight is null
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.weight").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWithDecimalWeight() throws Exception {
+        given(this.clinicService.findPetById(4)).willReturn(petMapper.toPet(pets.get(1)));
+        PetDto updatedPet = pets.get(1);
+        updatedPet.setWeight(15.75); // Test decimal precision
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+        this.mockMvc.perform(put("/api/pets/4")
+                .content(updatedPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isNoContent());
+
+        // Verify the decimal weight
+        this.mockMvc.perform(get("/api/pets/4")
+                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(4))
+            .andExpect(jsonPath("$.weight").value(15.75));
     }
 
 }
