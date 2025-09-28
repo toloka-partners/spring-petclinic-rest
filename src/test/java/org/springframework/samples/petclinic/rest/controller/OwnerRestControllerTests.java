@@ -43,6 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -353,6 +354,7 @@ class OwnerRestControllerTests {
     void testCreatePetSuccess() throws Exception {
         PetDto newPet = pets.get(0);
         newPet.setId(999);
+        newPet.setWeight(Double.valueOf("8.3"));
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -361,7 +363,9 @@ class OwnerRestControllerTests {
         System.err.println("--> newPetAsJSON=" + newPetAsJSON);
         this.mockMvc.perform(post("/api/owners/1/pets")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated());
+            .andExpect(status().isCreated())
+            .andExpect(header().exists("location"))
+            .andExpect(jsonPath("$.weight").value(8.3));
     }
 
     @Test

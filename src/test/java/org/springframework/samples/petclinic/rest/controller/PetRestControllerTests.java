@@ -39,6 +39,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -99,6 +100,7 @@ class PetRestControllerTests {
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
+            .weight(Double.valueOf(23.1))
             .birthDate(LocalDate.now())
             .type(petType));
     }
@@ -219,4 +221,46 @@ class PetRestControllerTests {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetPetWithWeight() throws Exception {
+        pets.get(0).setWeight(Double.valueOf("12.5"));
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+    
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(12.5));
+    }
+    
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWeightSuccess() throws Exception {
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+    
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setWeight(Double.valueOf("15.7"));
+    
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+    
+        this.mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetAsJSON)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isNoContent());
+    
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.weight").value(15.7));
+    } 
+   
 }
