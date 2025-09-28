@@ -20,6 +20,7 @@ import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -37,6 +38,8 @@ public class Pet extends NamedEntity {
 
     @Column(name = "birth_date", columnDefinition = "DATE")
     private LocalDate birthDate;
+    @Column(name = "weight", precision = 10, scale = 2)
+    private BigDecimal weight;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "type_id")
@@ -57,6 +60,13 @@ public class Pet extends NamedEntity {
         this.birthDate = birthDate;
     }
 
+    public BigDecimal getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
+    }
     public PetType getType() {
         return this.type;
     }
