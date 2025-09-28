@@ -42,4 +42,36 @@ class ValidatorTests {
         assertThat(violation.getMessage()).isEqualTo("must not be empty");
     }
 
+    @Test
+    void shouldValidatePetWithValidWeight() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        Pet pet = new Pet();
+        pet.setName("Fluffy");
+        pet.setWeight(15.5);
+
+        Validator validator = createValidator();
+        Set<ConstraintViolation<Pet>> constraintViolations = validator.validate(pet);
+
+        // Should have violations for missing fields but not for weight
+        boolean hasWeightViolation = constraintViolations.stream()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("weight"));
+        assertThat(hasWeightViolation).isFalse();
+    }
+
+    @Test
+    void shouldValidatePetWithNullWeight() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        Pet pet = new Pet();
+        pet.setName("Fluffy");
+        pet.setWeight(null);
+
+        Validator validator = createValidator();
+        Set<ConstraintViolation<Pet>> constraintViolations = validator.validate(pet);
+
+        // Should not have violations for null weight (it's optional)
+        boolean hasWeightViolation = constraintViolations.stream()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("weight"));
+        assertThat(hasWeightViolation).isFalse();
+    }
+
 }

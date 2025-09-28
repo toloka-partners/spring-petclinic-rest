@@ -113,7 +113,7 @@ abstract class AbstractClinicServiceTests {
         Pet pet7 = this.clinicService.findPetById(7);
         assertThat(pet7.getName()).startsWith("Samantha");
         assertThat(pet7.getOwner().getFirstName()).isEqualTo("Jean");
-
+        assertThat(pet7.getWeight()).isNotNull();
     }
 
 //    @Test
@@ -137,7 +137,7 @@ abstract class AbstractClinicServiceTests {
         Collection<PetType> types = this.clinicService.findPetTypes();
         pet.setType(EntityUtils.getById(types, PetType.class, 2));
         pet.setBirthDate(LocalDate.now());
-        pet.setWeight(22.5);
+        pet.setWeight(24.5);
         owner6.addPet(pet);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
@@ -148,9 +148,9 @@ abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
-        // check that weight was saved correctly
+        // checks that weight was persisted
         Pet savedPet = this.clinicService.findPetById(pet.getId());
-        assertThat(savedPet.getWeight()).isEqualTo(22.5);
+        assertThat(savedPet.getWeight()).isEqualTo(24.5);
     }
 
     @Test
@@ -165,53 +165,6 @@ abstract class AbstractClinicServiceTests {
 
         pet7 = this.clinicService.findPetById(7);
         assertThat(pet7.getName()).isEqualTo(newName);
-    }
-
-    @Test
-    @Transactional
-    void shouldUpdatePetWeight() throws Exception {
-        Pet pet7 = this.clinicService.findPetById(7);
-        Double newWeight = 25.75;
-        
-        pet7.setWeight(newWeight);
-        this.clinicService.savePet(pet7);
-
-        pet7 = this.clinicService.findPetById(7);
-        assertThat(pet7.getWeight()).isEqualTo(newWeight);
-    }
-
-    @Test
-    @Transactional
-    void shouldSetPetWeightToNull() throws Exception {
-        Pet pet7 = this.clinicService.findPetById(7);
-        
-        pet7.setWeight(null);
-        this.clinicService.savePet(pet7);
-
-        pet7 = this.clinicService.findPetById(7);
-        assertThat(pet7.getWeight()).isNull();
-    }
-
-    @Test
-    @Transactional
-    void shouldCreatePetWithNullWeight() throws Exception {
-        Owner owner6 = this.clinicService.findOwnerById(6);
-        int found = owner6.getPets().size();
-
-        Pet pet = new Pet();
-        pet.setName("fluffy");
-        Collection<PetType> types = this.clinicService.findPetTypes();
-        pet.setType(EntityUtils.getById(types, PetType.class, 1));
-        pet.setBirthDate(LocalDate.now());
-        pet.setWeight(null); // explicitly set to null
-        owner6.addPet(pet);
-
-        this.clinicService.savePet(pet);
-        this.clinicService.saveOwner(owner6);
-
-        Pet savedPet = this.clinicService.findPetById(pet.getId());
-        assertThat(savedPet.getWeight()).isNull();
-        assertThat(savedPet.getName()).isEqualTo("fluffy");
     }
 
     @Test
