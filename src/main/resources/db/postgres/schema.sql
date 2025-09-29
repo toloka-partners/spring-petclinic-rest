@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS pets (
                                     name       TEXT,
                                     birth_date DATE,
                                     type_id    INT NOT NULL REFERENCES types (id),
+                                     weight     DECIMAL(10,2),
                                     owner_id   INT REFERENCES owners (id)
 );
 CREATE INDEX ON pets (name);

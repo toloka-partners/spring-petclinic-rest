@@ -50,6 +50,7 @@ CREATE TABLE pets (
   name       VARCHAR(30),
   birth_date DATE,
   type_id    INTEGER NOT NULL,
+  weight     DECIMAL(10,2),
   owner_id   INTEGER NOT NULL
 );
 ALTER TABLE pets ADD CONSTRAINT fk_pets_owners FOREIGN KEY (owner_id) REFERENCES owners (id);
