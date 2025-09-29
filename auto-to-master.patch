@@ -1,0 +1,1573 @@
+diff --git a/src/main/java/com/example/petservice/PetServiceApplication.java b/src/main/java/com/example/petservice/PetServiceApplication.java
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/src/main/java/com/example/petservice/PetServiceApplication.java
+@@ -0,0 +1,13 @@
++package main.java.com.example.petservice;
++
++
++import org.springframework.boot.SpringApplication;
++import org.springframework.boot.autoconfigure.SpringBootApplication;
++
++
++@SpringBootApplication
++public class PetServiceApplication {
++public static void main(String[] args) {
++SpringApplication.run(PetServiceApplication.class, args);
++}
++}
+
+diff --git a/src/main/java/com/example/petservice/domain/Pet.java b/src/main/java/com/example/petservice/domain/Pet.java
+new file mode 100644
+index 0000000..2345678
+--- /dev/null
++++ b/src/main/java/com/example/petservice/domain/Pet.java
+@@ -0,0 +1,25 @@
++package main.java.com.example.petservice.domain;
++
++import jakarta.persistence.*;
++import lombok.*;
++
++@Entity
++@Table(name = "pets")
++@Getter
++@Setter
++@NoArgsConstructor
++@AllArgsConstructor
++@ToString
++public class Pet {
++
++    @Id
++    @GeneratedValue(strategy = GenerationType.IDENTITY)
++    private Long id;
++
++    @Column(nullable = false)
++    private String name;
++
++    // NEW field: weight in kilograms (nullable)
++    @Column(name = "weight")
++    private Double weight;
++}
+
+diff --git a/src/main/java/com/example/petservice/repository/PetRepository.java b/src/main/java/com/example/petservice/repository/PetRepository.java
+new file mode 100644
+index 0000000..3456789
+--- /dev/null
++++ b/src/main/java/com/example/petservice/repository/PetRepository.java
+@@ -0,0 +1,11 @@
++package main.java.com.example.petservice.repository;
++
++
++import com.example.petservice.domain.Pet;
++import org.springframework.data.jpa.repository.JpaRepository;
++import org.springframework.stereotype.Repository;
++
++
++@Repository
++public interface PetRepository extends JpaRepository<Pet, Long> {
++}
+
+diff --git a/src/main/java/com/example/petservice/service/PetService.java b/src/main/java/com/example/petservice/service/PetService.java
+new file mode 100644
+index 0000000..4567890
+--- /dev/null
++++ b/src/main/java/com/example/petservice/service/PetService.java
+@@ -0,0 +1,40 @@
++package main.java.com.example.petservice.service;
++
++
++import com.example.petservice.domain.Pet;
++import com.example.petservice.repository.PetRepository;
++import org.springframework.stereotype.Service;
++
++
++import java.util.List;
++
++
++@Service
++public class PetService {
++private final PetRepository repo;
++
++
++public PetService(PetRepository repo) {
++this.repo = repo;
++}
++
++
++public Pet save(Pet pet) {
++return repo.save(pet);
++}
++
++
++public List<Pet> findAll() {
++return repo.findAll();
++}
++
++
++public Pet findOne(Long id) {
++return repo.findById(id).orElse(null);
++}
++
++
++public void delete(Long id) {
++repo.deleteById(id);
++}
++}
+
+diff --git a/src/main/java/com/example/petservice/service/mapper/PetMapper.java b/src/main/java/com/example/petservice/service/mapper/PetMapper.java
+new file mode 100644
+index 0000000..5678901
+--- /dev/null
++++ b/src/main/java/com/example/petservice/service/mapper/PetMapper.java
+@@ -0,0 +1,15 @@
++package main.java.com.example.petservice.service.mapper;
++
++import com.example.petservice.domain.Pet;
++import com.example.petservice.web.dto.PetDTO;
++import org.mapstruct.Mapper;
++import org.springframework.stereotype.Component;
++
++@Mapper(componentModel = "spring")
++@Component
++public interface PetMapper {
++    
++    PetDTO toDto(Pet entity);
++    
++    Pet toEntity(PetDTO dto);
++}
+
+diff --git a/src/main/java/com/example/petservice/web/dto/PetDTO.java b/src/main/java/com/example/petservice/web/dto/PetDTO.java
+new file mode 100644
+index 0000000..6789012
+--- /dev/null
++++ b/src/main/java/com/example/petservice/web/dto/PetDTO.java
+@@ -0,0 +1,15 @@
++package main.java.com.example.petservice.web.dto;
++
++import lombok.*;
++
++@Getter
++@Setter
++@NoArgsConstructor
++@AllArgsConstructor
++@ToString
++public class PetDTO {
++    private Long id;
++    private String name;
++    // NEW field: weight in kilograms (nullable)
++    private Double weight;
++}
+
+diff --git a/src/main/java/com/example/petservice/web/rest/PetController.java b/src/main/java/com/example/petservice/web/rest/PetController.java
+new file mode 100644
+index 0000000..7890123
+--- /dev/null
++++ b/src/main/java/com/example/petservice/web/rest/PetController.java
+@@ -0,0 +1,46 @@
++package main.java.com.example.petservice.web.rest;
++
++import com.example.petservice.service.PetService;
++import com.example.petservice.service.mapper.PetMapper;
++import com.example.petservice.web.dto.PetDTO;
++import com.example.petservice.domain.Pet;
++import org.springframework.http.ResponseEntity;
++import org.springframework.web.bind.annotation.*;
++
++import java.net.URI;
++import java.util.List;
++import java.util.stream.Collectors;
++
++@RestController
++@RequestMapping("/api/pets")
++public class PetController {
++
++    private final PetService petService;
++    private final PetMapper petMapper;
++
++    public PetController(PetService petService, PetMapper petMapper) {
++        this.petService = petService;
++        this.petMapper = petMapper;
++    }
++
++    @PostMapping
++    public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO dto) {
++        Pet pet = petMapper.toEntity(dto);
++        Pet saved = petService.save(pet);
++        PetDTO result = petMapper.toDto(saved);
++        return ResponseEntity.created(URI.create("/api/pets/" + result.getId())).body(result);
++    }
++
++    @GetMapping
++    public List<PetDTO> getAll() {
++        return petService.findAll().stream().map(petMapper::toDto).collect(Collectors.toList());
++    }
++
++    @GetMapping("/{id}")
++    public ResponseEntity<PetDTO> getOne(@PathVariable Long id) {
++        Pet pet = petService.findOne(id);
++        if (pet == null)
++            return ResponseEntity.notFound().build();
++        return ResponseEntity.ok(petMapper.toDto(pet));
++    }
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/OwnerRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/OwnerRestController.java
+new file mode 100644
+index 0000000..8901234
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/OwnerRestController.java
+@@ -0,0 +1,195 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpHeaders;
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.OwnerMapper;
++import org.springframework.samples.petclinic.mapper.PetMapper;
++import org.springframework.samples.petclinic.mapper.VisitMapper;
++import org.springframework.samples.petclinic.model.Owner;
++import org.springframework.samples.petclinic.model.Pet;
++import org.springframework.samples.petclinic.model.Visit;
++import org.springframework.samples.petclinic.rest.api.OwnersApi;
++import org.springframework.samples.petclinic.rest.dto.*;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.CrossOrigin;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RestController;
++import org.springframework.web.util.UriComponentsBuilder;
++
++import jakarta.transaction.Transactional;
++
++import java.util.Collection;
++import java.util.List;
++
++/**
++ * @author Vitaliy Fedoriv
++ */
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("/api")
++public class OwnerRestController implements OwnersApi {
++
++    private final ClinicService clinicService;
++
++    private final OwnerMapper ownerMapper;
++
++    private final PetMapper petMapper;
++
++    private final VisitMapper visitMapper;
++
++    public OwnerRestController(ClinicService clinicService,
++                               OwnerMapper ownerMapper,
++                               PetMapper petMapper,
++                               VisitMapper visitMapper) {
++        this.clinicService = clinicService;
++        this.ownerMapper = ownerMapper;
++        this.petMapper = petMapper;
++        this.visitMapper = visitMapper;
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<List<OwnerDto>> listOwners(String lastName) {
++        Collection<Owner> owners;
++        if (lastName != null) {
++            owners = this.clinicService.findOwnerByLastName(lastName);
++        } else {
++            owners = this.clinicService.findAllOwners();
++        }
++        if (owners.isEmpty()) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(ownerMapper.toOwnerDtoCollection(owners), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<OwnerDto> getOwner(Integer ownerId) {
++        Owner owner = this.clinicService.findOwnerById(ownerId);
++        if (owner == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(ownerMapper.toOwnerDto(owner), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<OwnerDto> addOwner(OwnerFieldsDto ownerFieldsDto) {
++        HttpHeaders headers = new HttpHeaders();
++        Owner owner = ownerMapper.toOwner(ownerFieldsDto);
++        this.clinicService.saveOwner(owner);
++        OwnerDto ownerDto = ownerMapper.toOwnerDto(owner);
++        headers.setLocation(UriComponentsBuilder.newInstance()
++            .path("/api/owners/{id}").buildAndExpand(owner.getId()).toUri());
++        return new ResponseEntity<>(ownerDto, headers, HttpStatus.CREATED);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<OwnerDto> updateOwner(Integer ownerId, OwnerFieldsDto ownerFieldsDto) {
++        Owner currentOwner = this.clinicService.findOwnerById(ownerId);
++        if (currentOwner == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        currentOwner.setAddress(ownerFieldsDto.getAddress());
++        currentOwner.setCity(ownerFieldsDto.getCity());
++        currentOwner.setFirstName(ownerFieldsDto.getFirstName());
++        currentOwner.setLastName(ownerFieldsDto.getLastName());
++        currentOwner.setTelephone(ownerFieldsDto.getTelephone());
++        this.clinicService.saveOwner(currentOwner);
++        return new ResponseEntity<>(ownerMapper.toOwnerDto(currentOwner), HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Transactional
++    @Override
++    public ResponseEntity<OwnerDto> deleteOwner(Integer ownerId) {
++        Owner owner = this.clinicService.findOwnerById(ownerId);
++        if (owner == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        this.clinicService.deleteOwner(owner);
++        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<PetDto> addPetToOwner(Integer ownerId, PetFieldsDto petFieldsDto) {
++        HttpHeaders headers = new HttpHeaders();
++        Pet pet = petMapper.toPet(petFieldsDto);
++        Owner owner = new Owner();
++        owner.setId(ownerId);
++        pet.setOwner(owner);
++        pet.getType().setName(null);
++        this.clinicService.savePet(pet);
++        PetDto petDto = petMapper.toPetDto(pet);
++        headers.setLocation(UriComponentsBuilder.newInstance().path("/api/pets/{id}")
++            .buildAndExpand(pet.getId()).toUri());
++        return new ResponseEntity<>(petDto, headers, HttpStatus.CREATED);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<Void> updateOwnersPet(Integer ownerId, Integer petId, PetFieldsDto petFieldsDto) {
++        Owner currentOwner = this.clinicService.findOwnerById(ownerId);
++        if (currentOwner != null) {
++            Pet currentPet = this.clinicService.findPetById(petId);
++            if (currentPet != null) {
++                currentPet.setBirthDate(petFieldsDto.getBirthDate());
++                currentPet.setName(petFieldsDto.getName());
++                currentPet.setType(petMapper.toPetType(petFieldsDto.getType()));
++                this.clinicService.savePet(currentPet);
++                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++            }
++        }
++        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<VisitDto> addVisitToOwner(Integer ownerId, Integer petId, VisitFieldsDto visitFieldsDto) {
++        HttpHeaders headers = new HttpHeaders();
++        Visit visit = visitMapper.toVisit(visitFieldsDto);
++        Pet pet = new Pet();
++        pet.setId(petId);
++        visit.setPet(pet);
++        this.clinicService.saveVisit(visit);
++        VisitDto visitDto = visitMapper.toVisitDto(visit);
++        headers.setLocation(UriComponentsBuilder.newInstance().path("/api/visits/{id}")
++            .buildAndExpand(visit.getId()).toUri());
++        return new ResponseEntity<>(visitDto, headers, HttpStatus.CREATED);
++    }
++
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<PetDto> getOwnersPet(Integer ownerId, Integer petId) {
++        Owner owner = this.clinicService.findOwnerById(ownerId);
++        if (owner != null) {
++            Pet pet = owner.getPet(petId);
++            if (pet != null) {
++                return new ResponseEntity<>(petMapper.toPetDto(pet), HttpStatus.OK);
++            }
++        }
++        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++    }
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/PetRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/PetRestController.java
+new file mode 100644
+index 0000000..9012345
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/PetRestController.java
+@@ -0,0 +1,98 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.PetMapper;
++import org.springframework.samples.petclinic.model.Pet;
++import org.springframework.samples.petclinic.rest.api.PetsApi;
++import org.springframework.samples.petclinic.rest.dto.PetDto;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.CrossOrigin;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RestController;
++
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * @author Vitaliy Fedoriv
++ */
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("api")
++public class PetRestController implements PetsApi {
++
++    private final ClinicService clinicService;
++
++    private final PetMapper petMapper;
++
++    public PetRestController(ClinicService clinicService, PetMapper petMapper) {
++        this.clinicService = clinicService;
++        this.petMapper = petMapper;
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<PetDto> getPet(Integer petId) {
++        PetDto pet = petMapper.toPetDto(this.clinicService.findPetById(petId));
++        if (pet == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(pet, HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<List<PetDto>> listPets() {
++        List<PetDto> pets = new ArrayList<>(petMapper.toPetsDto(this.clinicService.findAllPets()));
++        if (pets.isEmpty()) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(pets, HttpStatus.OK);
++    }
++
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<PetDto> updatePet(Integer petId, PetDto petDto) {
++        Pet currentPet = this.clinicService.findPetById(petId);
++        if (currentPet == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        currentPet.setBirthDate(petDto.getBirthDate());
++        currentPet.setName(petDto.getName());
++        currentPet.setType(petMapper.toPetType(petDto.getType()));
++        this.clinicService.savePet(currentPet);
++        return new ResponseEntity<>(petMapper.toPetDto(currentPet), HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<PetDto> deletePet(Integer petId) {
++        Pet pet = this.clinicService.findPetById(petId);
++        if (pet == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        this.clinicService.deletePet(pet);
++        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++    }
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/PetTypeRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/PetTypeRestController.java
+new file mode 100644
+index 0000000..0123456
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/PetTypeRestController.java
+@@ -0,0 +1,105 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpHeaders;
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.PetTypeMapper;
++import org.springframework.samples.petclinic.model.PetType;
++import org.springframework.samples.petclinic.rest.api.PettypesApi;
++import org.springframework.samples.petclinic.rest.dto.PetTypeDto;
++import org.springframework.samples.petclinic.rest.dto.PetTypeFieldsDto;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.*;
++import org.springframework.web.util.UriComponentsBuilder;
++
++import jakarta.transaction.Transactional;
++
++import java.util.ArrayList;
++import java.util.List;
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("api")
++public class PetTypeRestController implements PettypesApi {
++
++    private final ClinicService clinicService;
++    private final PetTypeMapper petTypeMapper;
++
++
++    public PetTypeRestController(ClinicService clinicService, PetTypeMapper petTypeMapper) {
++        this.clinicService = clinicService;
++        this.petTypeMapper = petTypeMapper;
++    }
++
++    @PreAuthorize("hasAnyRole(@roles.OWNER_ADMIN, @roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<List<PetTypeDto>> listPetTypes() {
++        List<PetType> petTypes = new ArrayList<>(this.clinicService.findAllPetTypes());
++        if (petTypes.isEmpty()) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(petTypeMapper.toPetTypeDtos(petTypes), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasAnyRole(@roles.OWNER_ADMIN, @roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<PetTypeDto> getPetType(Integer petTypeId) {
++        PetType petType = this.clinicService.findPetTypeById(petTypeId);
++        if (petType == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(petTypeMapper.toPetTypeDto(petType), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<PetTypeDto> addPetType(PetTypeFieldsDto petTypeFieldsDto) {
++        HttpHeaders headers = new HttpHeaders();
++        final PetType type = petTypeMapper.toPetType(petTypeFieldsDto);
++        this.clinicService.savePetType(type);
++        headers.setLocation(UriComponentsBuilder.newInstance().path("/api/pettypes/{id}").buildAndExpand(type.getId()).toUri());
++        return new ResponseEntity<>(petTypeMapper.toPetTypeDto(type), headers, HttpStatus.CREATED);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<PetTypeDto> updatePetType(Integer petTypeId, PetTypeDto petTypeDto) {
++        PetType currentPetType = this.clinicService.findPetTypeById(petTypeId);
++        if (currentPetType == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        currentPetType.setName(petTypeDto.getName());
++        this.clinicService.savePetType(currentPetType);
++        return new ResponseEntity<>(petTypeMapper.toPetTypeDto(currentPetType), HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Transactional
++    @Override
++    public ResponseEntity<PetTypeDto> deletePetType(Integer petTypeId) {
++        PetType petType = this.clinicService.findPetTypeById(petTypeId);
++        if (petType == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        this.clinicService.deletePetType(petType);
++        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++    }
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java
+@@ -0,0 +1,47 @@
++/*
++ * Copyright 2016-2018 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import java.io.IOException;
++
++import jakarta.servlet.http.HttpServletResponse;
++
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.web.bind.annotation.CrossOrigin;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RestController;
++
++/**
++ * @author Vitaliy Fedoriv
++ *
++ */
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("/")
++public class RootRestController {
++
++    @Value("#{servletContext.contextPath}")
++    private String servletContextPath;
++
++	@RequestMapping(value = "/")
++	public void redirectToSwagger(HttpServletResponse response) throws IOException {
++		response.sendRedirect(this.servletContextPath + "/swagger-ui/index.html");
++	}
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/SpecialtyRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/SpecialtyRestController.java
+new file mode 100644
+index 0000000..2345678
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/SpecialtyRestController.java
+@@ -0,0 +1,108 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpHeaders;
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.SpecialtyMapper;
++import org.springframework.samples.petclinic.model.Specialty;
++import org.springframework.samples.petclinic.rest.api.SpecialtiesApi;
++import org.springframework.samples.petclinic.rest.dto.SpecialtyDto;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.*;
++import org.springframework.web.util.UriComponentsBuilder;
++
++import jakarta.transaction.Transactional;
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * @author Vitaliy Fedoriv
++ */
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("api")
++public class SpecialtyRestController implements SpecialtiesApi {
++
++    private final ClinicService clinicService;
++
++    private final SpecialtyMapper specialtyMapper;
++
++    public SpecialtyRestController(ClinicService clinicService, SpecialtyMapper specialtyMapper) {
++        this.clinicService = clinicService;
++        this.specialtyMapper = specialtyMapper;
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<List<SpecialtyDto>> listSpecialties() {
++        List<SpecialtyDto> specialties = new ArrayList<>();
++        specialties.addAll(specialtyMapper.toSpecialtyDtos(this.clinicService.findAllSpecialties()));
++        if (specialties.isEmpty()) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(specialties, HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<SpecialtyDto> getSpecialty(Integer specialtyId) {
++        Specialty specialty = this.clinicService.findSpecialtyById(specialtyId);
++        if (specialty == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(specialtyMapper.toSpecialtyDto(specialty), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<SpecialtyDto> addSpecialty(SpecialtyDto specialtyDto) {
++        HttpHeaders headers = new HttpHeaders();
++        Specialty specialty = specialtyMapper.toSpecialty(specialtyDto);
++        this.clinicService.saveSpecialty(specialty);
++        headers.setLocation(UriComponentsBuilder.newInstance().path("/api/specialties/{id}").buildAndExpand(specialty.getId()).toUri());
++        return new ResponseEntity<>(specialtyMapper.toSpecialtyDto(specialty), headers, HttpStatus.CREATED);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<SpecialtyDto> updateSpecialty(Integer specialtyId, SpecialtyDto specialtyDto) {
++        Specialty currentSpecialty = this.clinicService.findSpecialtyById(specialtyId);
++        if (currentSpecialty == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        currentSpecialty.setName(specialtyDto.getName());
++        this.clinicService.saveSpecialty(currentSpecialty);
++        return new ResponseEntity<>(specialtyMapper.toSpecialtyDto(currentSpecialty), HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Transactional
++    @Override
++    public ResponseEntity<SpecialtyDto> deleteSpecialty(Integer specialtyId) {
++        Specialty specialty = this.clinicService.findSpecialtyById(specialtyId);
++        if (specialty == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        this.clinicService.deleteSpecialty(specialty);
++        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++    }
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/UserRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/UserRestController.java
+new file mode 100644
+index 0000000..3456789
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/UserRestController.java
+@@ -0,0 +1,57 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpHeaders;
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.UserMapper;
++import org.springframework.samples.petclinic.model.User;
++import org.springframework.samples.petclinic.rest.api.UsersApi;
++import org.springframework.samples.petclinic.rest.dto.UserDto;
++import org.springframework.samples.petclinic.service.UserService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.CrossOrigin;
++import org.springframework.web.bind.annotation.RequestBody;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RestController;
++
++import jakarta.validation.Valid;
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("api")
++public class UserRestController implements UsersApi {
++
++    private final UserService userService;
++    private final UserMapper userMapper;
++
++    public UserRestController(UserService userService, UserMapper userMapper) {
++        this.userService = userService;
++        this.userMapper = userMapper;
++    }
++
++
++    @PreAuthorize( "hasRole(@roles.ADMIN)" )
++    @Override
++    public ResponseEntity<UserDto> addUser(UserDto userDto) {
++        HttpHeaders headers = new HttpHeaders();
++        User user = userMapper.toUser(userDto);
++        this.userService.saveUser(user);
++        return new ResponseEntity<>(userMapper.toUserDto(user), headers, HttpStatus.CREATED);
++    }
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/VetRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/VetRestController.java
+new file mode 100644
+index 0000000..4567890
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/VetRestController.java
+@@ -0,0 +1,122 @@
++/*
++ * Copyright 2016-2018 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpHeaders;
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.SpecialtyMapper;
++import org.springframework.samples.petclinic.mapper.VetMapper;
++import org.springframework.samples.petclinic.model.Specialty;
++import org.springframework.samples.petclinic.model.Vet;
++import org.springframework.samples.petclinic.rest.api.VetsApi;
++import org.springframework.samples.petclinic.rest.dto.VetDto;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.*;
++import org.springframework.web.util.UriComponentsBuilder;
++
++import jakarta.transaction.Transactional;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.stream.Collectors;
++
++/**
++ * @author Vitaliy Fedoriv
++ */
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("api")
++public class VetRestController implements VetsApi {
++
++    private final ClinicService clinicService;
++    private final VetMapper vetMapper;
++    private final SpecialtyMapper specialtyMapper;
++
++    public VetRestController(ClinicService clinicService, VetMapper vetMapper, SpecialtyMapper specialtyMapper) {
++        this.clinicService = clinicService;
++        this.vetMapper = vetMapper;
++        this.specialtyMapper = specialtyMapper;
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<List<VetDto>> listVets() {
++        List<VetDto> vets = new ArrayList<>(vetMapper.toVetDtos(this.clinicService.findAllVets()));
++        if (vets.isEmpty()) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(vets, HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<VetDto> getVet(Integer vetId)  {
++        Vet vet = this.clinicService.findVetById(vetId);
++        if (vet == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(vetMapper.toVetDto(vet), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<VetDto> addVet(VetDto vetDto) {
++        HttpHeaders headers = new HttpHeaders();
++        Vet vet = vetMapper.toVet(vetDto);
++        if(vet.getNrOfSpecialties() > 0){
++            List<Specialty> vetSpecialities = this.clinicService.findSpecialtiesByNameIn(vet.getSpecialties().stream().map(Specialty::getName).collect(Collectors.toSet()));
++            vet.setSpecialties(vetSpecialities);
++        }
++        this.clinicService.saveVet(vet);
++        headers.setLocation(UriComponentsBuilder.newInstance().path("/api/vets/{id}").buildAndExpand(vet.getId()).toUri());
++        return new ResponseEntity<>(vetMapper.toVetDto(vet), headers, HttpStatus.CREATED);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Override
++    public ResponseEntity<VetDto> updateVet(Integer vetId,VetDto vetDto)  {
++        Vet currentVet = this.clinicService.findVetById(vetId);
++        if (currentVet == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        currentVet.setFirstName(vetDto.getFirstName());
++        currentVet.setLastName(vetDto.getLastName());
++        currentVet.clearSpecialties();
++        for (Specialty spec : specialtyMapper.toSpecialtys(vetDto.getSpecialties())) {
++            currentVet.addSpecialty(spec);
++        }
++        if(currentVet.getNrOfSpecialties() > 0){
++            List<Specialty> vetSpecialities = this.clinicService.findSpecialtiesByNameIn(currentVet.getSpecialties().stream().map(Specialty::getName).collect(Collectors.toSet()));
++            currentVet.setSpecialties(vetSpecialities);
++        }
++        this.clinicService.saveVet(currentVet);
++        return new ResponseEntity<>(vetMapper.toVetDto(currentVet), HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.VET_ADMIN)")
++    @Transactional
++    @Override
++    public ResponseEntity<VetDto> deleteVet(Integer vetId) {
++        Vet vet = this.clinicService.findVetById(vetId);
++        if (vet == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        this.clinicService.deleteVet(vet);
++        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++    }
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/VisitRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/VisitRestController.java
+new file mode 100644
+index 0000000..5678901
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/VisitRestController.java
+@@ -0,0 +1,110 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.springframework.http.HttpHeaders;
++import org.springframework.http.HttpStatus;
++import org.springframework.http.ResponseEntity;
++import org.springframework.samples.petclinic.mapper.VisitMapper;
++import org.springframework.samples.petclinic.model.Visit;
++import org.springframework.samples.petclinic.rest.api.VisitsApi;
++import org.springframework.samples.petclinic.rest.dto.VisitDto;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.security.access.prepost.PreAuthorize;
++import org.springframework.web.bind.annotation.*;
++import org.springframework.web.util.UriComponentsBuilder;
++
++import jakarta.transaction.Transactional;
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * @author Vitaliy Fedoriv
++ */
++
++@RestController
++@CrossOrigin(exposedHeaders = "errors, content-type")
++@RequestMapping("api")
++public class VisitRestController implements VisitsApi {
++
++    private final ClinicService clinicService;
++
++    private final VisitMapper visitMapper;
++
++    public VisitRestController(ClinicService clinicService, VisitMapper visitMapper) {
++        this.clinicService = clinicService;
++        this.visitMapper = visitMapper;
++    }
++
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<List<VisitDto>> listVisits() {
++        List<Visit> visits = new ArrayList<>(this.clinicService.findAllVisits());
++        if (visits.isEmpty()) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(new ArrayList<>(visitMapper.toVisitsDto(visits)), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<VisitDto> getVisit( Integer visitId) {
++        Visit visit = this.clinicService.findVisitById(visitId);
++        if (visit == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        return new ResponseEntity<>(visitMapper.toVisitDto(visit), HttpStatus.OK);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<VisitDto> addVisit(VisitDto visitDto) {
++        HttpHeaders headers = new HttpHeaders();
++        Visit visit = visitMapper.toVisit(visitDto);
++        this.clinicService.saveVisit(visit);
++        visitDto = visitMapper.toVisitDto(visit);
++        headers.setLocation(UriComponentsBuilder.newInstance().path("/api/visits/{id}").buildAndExpand(visit.getId()).toUri());
++        return new ResponseEntity<>(visitDto, headers, HttpStatus.CREATED);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Override
++    public ResponseEntity<VisitDto> updateVisit(Integer visitId, VisitDto visitDto) {
++        Visit currentVisit = this.clinicService.findVisitById(visitId);
++        if (currentVisit == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        currentVisit.setDate(visitDto.getDate());
++        currentVisit.setDescription(visitDto.getDescription());
++        this.clinicService.saveVisit(currentVisit);
++        return new ResponseEntity<>(visitMapper.toVisitDto(currentVisit), HttpStatus.NO_CONTENT);
++    }
++
++    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
++    @Transactional
++    @Override
++    public ResponseEntity<VisitDto> deleteVisit(Integer visitId) {
++        Visit visit = this.clinicService.findVisitById(visitId);
++        if (visit == null) {
++            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
++        }
++        this.clinicService.deleteVisit(visit);
++        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
++    }
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java
+new file mode 100644
+index 0000000..6789012
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java
+@@ -0,0 +1,95 @@
++/*
++ * Copyright 2002-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.springframework.samples.petclinic.repository.jpa;
++
++import java.util.Collection;
++import java.util.List;
++
++import jakarta.persistence.EntityManager;
++import jakarta.persistence.PersistenceContext;
++import jakarta.persistence.Query;
++
++import org.springframework.context.annotation.Profile;
++import org.springframework.dao.DataAccessException;
++import org.springframework.samples.petclinic.model.Pet;
++import org.springframework.samples.petclinic.model.PetType;
++import org.springframework.samples.petclinic.model.Visit;
++import org.springframework.samples.petclinic.repository.PetRepository;
++import org.springframework.stereotype.Repository;
++
++/**
++ * JPA implementation of the ClinicService interface using EntityManager.
++ * <p/>
++ * <p>The mappings are defined in "orm.xml" located in the META-INF directory.
++ *
++ * @author Mike Keith
++ * @author Rod Johnson
++ * @author Sam Brannen
++ * @author Michael Isvy
++ * @author Vitaliy Fedoriv
++ */
++@Repository
++@Profile("jpa")
++public class JpaPetRepositoryImpl implements PetRepository {
++
++    @PersistenceContext
++    private EntityManager em;
++
++    @Override
++    public List<PetType> findPetTypes() throws DataAccessException {
++        return this.em.createQuery("SELECT ptype FROM PetType ptype ORDER BY ptype.name").getResultList();
++    }
++
++    @Override
++    public Pet findById(int id) throws DataAccessException {
++        return this.em.find(Pet.class, id);
++    }
++
++    @Override
++    public void save(Pet pet) throws DataAccessException {
++        if (pet.getId() == null) {
++            this.em.persist(pet);
++        } else {
++            this.em.merge(pet);
++        }
++    }
++
++    @SuppressWarnings("unchecked")
++    @Override
++    public Collection<Pet> findAll() throws DataAccessException {
++        return this.em.createQuery("SELECT pet FROM Pet pet").getResultList();
++    }
++
++    @Override
++    public void delete(Pet pet) throws DataAccessException {
++        this.em.remove(this.em.contains(pet) ? pet : this.em.merge(pet));
++        String petId = pet.getId().toString();
++        List<Visit> visits = pet.getVisits();
++        for (Visit visit : visits) {
++            this.em.createQuery("DELETE FROM Visit visit WHERE id=" + visit.getId()).executeUpdate();
++        }
++        this.em.createQuery("DELETE FROM Pet pet WHERE id=" + petId).executeUpdate();
++    }
++
++    @Override
++    public Pet findByName(String name) throws DataAccessException {
++        Query query = this.em.createQuery("SELECT DISTINCT pet FROM Pet pet WHERE pet.name = :name");
++        query.setParameter("name", name);
++        return (Pet) query.getSingleResult();
++    }
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaSpecialtyRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaSpecialtyRepositoryImpl.java
+new file mode 100644
+index 0000000..7890123
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaSpecialtyRepositoryImpl.java
+@@ -0,0 +1,80 @@
++/*
++ * Copyright 2016-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.springframework.samples.petclinic.repository.jpa;
++
++import java.util.Collection;
++import java.util.List;
++import java.util.Set;
++
++import jakarta.persistence.EntityManager;
++import jakarta.persistence.PersistenceContext;
++
++import org.springframework.context.annotation.Profile;
++import org.springframework.dao.DataAccessException;
++import org.springframework.samples.petclinic.model.Specialty;
++import org.springframework.samples.petclinic.repository.SpecialtyRepository;
++import org.springframework.stereotype.Repository;
++
++/**
++ * @author Vitaliy Fedoriv
++ *
++ */
++
++@Repository
++@Profile("jpa")
++public class JpaSpecialtyRepositoryImpl implements SpecialtyRepository {
++
++    @PersistenceContext
++    private EntityManager em;
++
++	@Override
++	public Specialty findById(int id) {
++		return this.em.find(Specialty.class, id);
++	}
++
++    @Override
++    public List<Specialty> findSpecialtiesByNameIn(Set<String> names) {
++        final String jpql = "SELECT s FROM Specialty s WHERE s.name IN :names";
++        return em.createQuery(jpql, Specialty.class)
++            .setParameter("names", names)
++            .getResultList();
++    }
++
++    @SuppressWarnings("unchecked")
++	@Override
++	public Collection<Specialty> findAll() throws DataAccessException {
++		return this.em.createQuery("SELECT s FROM Specialty s").getResultList();
++	}
++
++	@Override
++	public void save(Specialty specialty) throws DataAccessException {
++		if (specialty.getId() == null) {
++            this.em.persist(specialty);
++        } else {
++            this.em.merge(specialty);
++        }
++	}
++
++	@Override
++	public void delete(Specialty specialty) throws DataAccessException {
++		this.em.remove(this.em.contains(specialty) ? specialty : this.em.merge(specialty));
++		Integer specId = specialty.getId();
++		this.em.createNativeQuery("DELETE FROM vet_specialties WHERE specialty_id=" + specId).executeUpdate();
++		this.em.createQuery("DELETE FROM Specialty specialty WHERE id=" + specId).executeUpdate();
++	}
++
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVetRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVetRepositoryImpl.java
+new file mode 100644
+index 0000000..8901234
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVetRepositoryImpl.java
+@@ -0,0 +1,75 @@
++/*
++ * Copyright 2002-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.springframework.samples.petclinic.repository.jpa;
++
++import java.util.Collection;
++
++import jakarta.persistence.EntityManager;
++import jakarta.persistence.PersistenceContext;
++
++import org.springframework.context.annotation.Profile;
++import org.springframework.dao.DataAccessException;
++import org.springframework.samples.petclinic.model.Vet;
++import org.springframework.samples.petclinic.repository.VetRepository;
++import org.springframework.stereotype.Repository;
++
++/**
++ * JPA implementation of the {@link VetRepository} interface.
++ *
++ * @author Mike Keith
++ * @author Rod Johnson
++ * @author Sam Brannen
++ * @author Michael Isvy
++ * @author Vitaliy Fedoriv
++ */
++@Repository
++@Profile("jpa")
++public class JpaVetRepositoryImpl implements VetRepository {
++
++    @PersistenceContext
++    private EntityManager em;
++
++    /**
++     * Refresh the cache of Vets that the ClinicService is holding.
++     */
++    @SuppressWarnings("unchecked")
++    @Override
++    public Collection<Vet> findAll() throws DataAccessException {
++        return this.em.createQuery("SELECT vet FROM Vet vet left join fetch vet.specialties").getResultList();
++    }
++
++	@Override
++	public Vet findById(int id) throws DataAccessException {
++		return this.em.find(Vet.class, id);
++	}
++
++	@Override
++	public void save(Vet vet) throws DataAccessException {
++		if (vet.getId() == null) {
++            this.em.persist(vet);
++        } else {
++            this.em.merge(vet);
++        }
++	}
++
++	@Override
++	public void delete(Vet vet) throws DataAccessException {
++		this.em.remove(this.em.contains(vet) ? vet : this.em.merge(vet));
++		Integer vetId = vet.getId();
++		this.em.createNativeQuery("DELETE FROM vet_specialties WHERE vet_id=" + vetId).executeUpdate();
++		this.em.createQuery("DELETE FROM Vet vet WHERE id=" + vetId).executeUpdate();
++	}
++}
+
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java
+new file mode 100644
+index 0000000..9012345
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java
+@@ -0,0 +1,84 @@
++/*
++ * Copyright 2002-2017 the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.springframework.samples.petclinic.repository.jpa;
++
++import java.util.Collection;
++import java.util.List;
++
++import jakarta.persistence.EntityManager;
++import jakarta.persistence.PersistenceContext;
++import jakarta.persistence.Query;
++
++import org.springframework.context.annotation.Profile;
++import org.springframework.dao.DataAccessException;
++import org.springframework.samples.petclinic.model.Visit;
++import org.springframework.samples.petclinic.repository.VisitRepository;
++import org.springframework.stereotype.Repository;
++
++/**
++ * JPA implementation of the ClinicService interface using EntityManager.
++ * <p/>
++ * <p>The mappings are defined in "orm.xml" located in the META-INF directory.
++ *
++ * @author Mike Keith
++ * @author Rod Johnson
++ * @author Sam Brannen
++ * @author Michael Isvy
++ * @author Vitaliy Fedoriv
++ */
++@Repository
++@Profile("jpa")
++public class JpaVisitRepositoryImpl implements VisitRepository {
++
++    @PersistenceContext
++    private EntityManager em;
++
++
++    @Override
++    public void save(Visit visit) {
++        if (visit.getId() == null) {
++            this.em.persist(visit);
++        } else {
++            this.em.merge(visit);
++        }
++    }
++
++
++    @Override
++    @SuppressWarnings("unchecked")
++    public List<Visit> findByPetId(Integer petId) {
++        Query query = this.em.createQuery("SELECT v FROM Visit v where v.pet.id= :id");
++        query.setParameter("id", petId);
++        return query.getResultList();
++    }
++
++	@Override
++	public Visit findById(int id) throws DataAccessException {
++		return this.em.find(Visit.class, id);
++	}
++
++	@SuppressWarnings("unchecked")
++	@Override
++	public Collection<Visit> findAll() throws DataAccessException {
++        return this.em.createQuery("SELECT v FROM Visit v").getResultList();
++	}
++
++	@Override
++	public void delete(Visit visit) throws DataAccessException {
++        this.em.remove(this.em.contains(visit) ? visit : this.em.merge(visit));
++	}
++
++}
+
+diff --git a/src/main/resources/application.yml b/src/main/resources/application.yml
+new file mode 100644
+index 0000000..0123456
+--- /dev/null
++++ b/src/main/resources/application.yml
+@@ -0,0 +1,15 @@
++spring:
++  application:
++    name: pet-service
++  datasource:
++    url: jdbc:h2:mem:testdb
++    driver-class-name: org.h2.Driver
++    username: sa
++    password: password
++  jpa:
++    database-platform: org.hibernate.dialect.H2Dialect
++    hibernate:
++      ddl-auto: create-drop
++    show-sql: true
++  h2:
++    console.enabled: true
+
+diff --git a/src/main/resources/db/migration/V2__add_weight_to_pet.sql b/src/main/resources/db/migration/V2__add_weight_to_pet.sql
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/src/main/resources/db/migration/V2__add_weight_to_pet.sql
+@@ -0,0 +1,2 @@
++-- Add weight column to pets table
++ALTER TABLE pets ADD COLUMN weight DECIMAL(5,2);
+
+diff --git a/src/test/java/com/example/petservice/PetResourceE2ETest.java b/src/test/java/com/example/petservice/PetResourceE2ETest.java
+new file mode 100644
+index 0000000..2345678
+--- /dev/null
++++ b/src/test/java/com/example/petservice/PetResourceE2ETest.java
+@@ -0,0 +1,65 @@
++package com.example.petservice;
++
++import com.example.petservice.web.dto.PetDTO;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
++import org.springframework.boot.test.context.SpringBootTest;
++import org.springframework.http.MediaType;
++import org.springframework.test.context.ActiveProfiles;
++import org.springframework.test.web.servlet.MockMvc;
++
++import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
++import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
++
++@SpringBootTest
++@AutoConfigureWebMvc
++@ActiveProfiles("test")
++public class PetResourceE2ETest {
++
++    @Autowired
++    private MockMvc mockMvc;
++
++    @Autowired
++    private ObjectMapper objectMapper;
++
++    @Test
++    public void testCreatePet() throws Exception {
++        PetDTO petDTO = new PetDTO();
++        petDTO.setName("Fluffy");
++        petDTO.setWeight(5.5);
++
++        mockMvc.perform(post("/api/pets")
++                .contentType(MediaType.APPLICATION_JSON)
++                .content(objectMapper.writeValueAsString(petDTO)))
++                .andExpect(status().isCreated())
++                .andExpect(jsonPath("$.name").value("Fluffy"))
++                .andExpect(jsonPath("$.weight").value(5.5));
++    }
++
++    @Test
++    public void testGetAllPets() throws Exception {
++        // First create a pet
++        PetDTO petDTO = new PetDTO();
++        petDTO.setName("Buddy");
++        petDTO.setWeight(10.0);
++
++        mockMvc.perform(post("/api/pets")
++                .contentType(MediaType.APPLICATION_JSON)
++                .content(objectMapper.writeValueAsString(petDTO)));
++
++        // Then get all pets
++        mockMvc.perform(get("/api/pets"))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$").isArray());
++    }
++
++    @Test
++    public void testGetPetById() throws Exception {
++        mockMvc.perform(get("/api/pets/1"))
++                .andExpect(status().isOk())
++                .andExpect(jsonPath("$.id").value(1));
++    }
++}
