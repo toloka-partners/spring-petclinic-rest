@@ -42,6 +42,7 @@ CREATE INDEX idx_owners_last_name ON owners(last_name);
 CREATE TABLE IF NOT EXISTS pets (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(30) NOT NULL,
+  weight DOUBLE,
   birth_date DATE NOT NULL,
   type_id INTEGER NOT NULL,
   owner_id INTEGER NOT NULL,
