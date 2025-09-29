@@ -27,6 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +79,11 @@ public class PetRestController implements PetsApi {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         currentPet.setBirthDate(petDto.getBirthDate());
+        if (petDto.getWeight() != null) {
+            currentPet.setWeight(BigDecimal.valueOf(petDto.getWeight()));
+        } else {
+            currentPet.setWeight(null);
+        }
         currentPet.setName(petDto.getName());
         currentPet.setType(petMapper.toPetType(petDto.getType()));
         this.clinicService.savePet(currentPet);

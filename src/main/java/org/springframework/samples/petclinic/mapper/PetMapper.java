@@ -8,6 +8,7 @@ import org.springframework.samples.petclinic.rest.dto.PetDto;
 import org.springframework.samples.petclinic.rest.dto.PetFieldsDto;
 import org.springframework.samples.petclinic.rest.dto.PetTypeDto;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 
 /**
@@ -36,4 +37,12 @@ public interface PetMapper {
     PetType toPetType(PetTypeDto petTypeDto);
 
     Collection<PetTypeDto> toPetTypeDtos(Collection<PetType> petTypes);
+
+    default Double map(BigDecimal value) {
+        return value == null ? null : value.doubleValue();
+    }
+
+    default BigDecimal map(Double value) {
+        return value == null ? null : BigDecimal.valueOf(value);
+    }
 }

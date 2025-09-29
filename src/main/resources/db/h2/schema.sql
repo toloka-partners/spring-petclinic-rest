@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS pets (
   name VARCHAR(30) NOT NULL,
   birth_date DATE NOT NULL,
   type_id INTEGER NOT NULL,
+  weight DECIMAL(10,2),
   owner_id INTEGER NOT NULL,
   FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
   FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE CASCADE
