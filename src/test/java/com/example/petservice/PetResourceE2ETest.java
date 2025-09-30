@@ -1,12 +1,12 @@
-package test.java.com.example.petservice;
+package com.example.petservice;
 
 import com.example.petservice.web.dto.PetDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.*;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,34 +25,37 @@ public class PetResourceE2ETest {
 
     @Test
     public void createPet_and_getAll_verifyWeight() {
-        // create DTO
-        PetDTO dto = new PetDTO();
-        dto.setName("Fido");
-        dto.setWeight(12.5);
+        // 1️⃣ Create PetDTO
+        PetDTO petDto = new PetDTO();
+        petDto.setName("Fido");
+        petDto.setWeight(12.5);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<PetDTO> request = new HttpEntity<>(dto, headers);
+        HttpEntity<PetDTO> request = new HttpEntity<>(petDto, headers);
 
-        // POST /api/pets
-        ResponseEntity<PetDTO> resp = restTemplate.postForEntity(baseUrl(), request, PetDTO.class);
-        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        PetDTO created = resp.getBody();
-        assertThat(created).isNotNull();
-        assertThat(created.getId()).isNotNull();
-        assertThat(created.getWeight()).isEqualTo(12.5);
+        // 2️⃣ POST /api/pets
+        ResponseEntity<PetDTO> postResponse = restTemplate.postForEntity(baseUrl(), request, PetDTO.class);
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-        // GET /api/pets and verify item present with weight
-        ResponseEntity<PetDTO[]> listResp = restTemplate.getForEntity(baseUrl(), PetDTO[].class);
-        assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        PetDTO[] pets = listResp.getBody();
+        PetDTO createdPet = postResponse.getBody();
+        assertThat(createdPet).isNotNull();
+        assertThat(createdPet.getId()).isNotNull();
+        assertThat(createdPet.getWeight()).isEqualTo(12.5);
+
+        // 3️⃣ GET /api/pets
+        ResponseEntity<PetDTO[]> getResponse = restTemplate.getForEntity(baseUrl(), PetDTO[].class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        PetDTO[] pets = getResponse.getBody();
         assertThat(pets).isNotNull();
         assertThat(pets.length).isGreaterThanOrEqualTo(1);
 
+        // 4️⃣ Verify the created pet is in the list with correct weight
         boolean found = false;
         for (PetDTO p : pets) {
-            if (p.getId().equals(created.getId())) {
+            if (p.getId().equals(createdPet.getId())) {
                 assertThat(p.getWeight()).isEqualTo(12.5);
                 found = true;
                 break;

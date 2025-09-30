@@ -1,4 +1,5 @@
-package main.java.com.example.petservice.domain;
+
+package com.example.petservice.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +20,6 @@ public class Pet {
     @Column(nullable = false)
     private String name;
 
-    // NEW field: weight in kilograms (nullable)
     @Column(name = "weight")
     private Double weight;
 }
