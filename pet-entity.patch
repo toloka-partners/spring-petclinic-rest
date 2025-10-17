@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Pet.java b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+index 1234567..abcdefg 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Pet.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+@@ -1,5 +1,6 @@
+ package org.springframework.samples.petclinic.model;
+ 
++import java.math.BigDecimal;
+ import java.time.LocalDate;
+ import java.util.ArrayList;
+ import java.util.Collections;
+@@ -32,6 +33,10 @@ public class Pet extends NamedEntity {
+     @Column(name = "birth_date")
+     private LocalDate birthDate;
+ 
++    @Column(name = "weight")
++    @Digits(integer = 8, fraction = 2)
++    private BigDecimal weight;
++
+     @ManyToOne
+     @JoinColumn(name = "type_id")
+     private PetType type;
+@@ -84,6 +89,14 @@ public class Pet extends NamedEntity {
+         this.birthDate = birthDate;
+     }
+ 
++    public BigDecimal getWeight() {
++        return weight;
++    }
++
++    public void setWeight(BigDecimal weight) {
++        this.weight = weight;
++    }
++
+     public PetType getType() {
+         return type;
+     }

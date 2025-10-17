@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Pet.java b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+index 1234567..abcdefg 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Pet.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+@@ -1,5 +1,6 @@
+ package org.springframework.samples.petclinic.model;
+ 
+ import java.time.LocalDate;
++import java.math.BigDecimal;
+ import java.util.ArrayList;
+ import java.util.Collections;
+@@ -47,6 +48,11 @@ public class Pet extends NamedEntity {
+     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+     private Set<Visit> visits;
+ 
++    // Nullable weight field for tracking pet weight over time
++    // Stored as DECIMAL(10,2) in the database
++    @Column(name = "weight", precision = 10, scale = 2)
++    private BigDecimal weight;
++
+     protected Set<Visit> getVisitsInternal() {
+         if (this.visits == null) {
+             this.visits = new HashSet<>();
+@@ -67,4 +73,12 @@ public class Pet extends NamedEntity {
+         getVisitsInternal().add(visit);
+         visit.setPet(this);
+     }
++
++    public BigDecimal getWeight() {
++        return this.weight;
++    }
++
++    public void setWeight(BigDecimal weight) {
++        this.weight = weight;
++    }
+ }
