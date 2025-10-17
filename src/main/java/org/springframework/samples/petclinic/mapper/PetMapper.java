@@ -17,16 +17,19 @@ import java.util.Collection;
 public interface PetMapper {
 
     @Mapping(source = "owner.id", target = "ownerId")
+@Mapping(source = "weight", target = "weight")
     PetDto toPetDto(Pet pet);
 
     Collection<PetDto> toPetsDto(Collection<Pet> pets);
 
     Collection<Pet> toPets(Collection<PetDto> pets);
 
+@Mapping(source = "weight", target = "weight")
     @Mapping(source = "ownerId", target = "owner.id")
     Pet toPet(PetDto petDto);
 
     @Mapping(target = "id", ignore = true)
+@Mapping(source = "weight", target = "weight")
     @Mapping(target = "owner", ignore = true)
     @Mapping(target = "visits", ignore = true)
     Pet toPet(PetFieldsDto petFieldsDto);
