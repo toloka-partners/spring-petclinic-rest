@@ -40,7 +40,6 @@ CREATE TABLE IF NOT EXISTS pets (
   name VARCHAR(30),
   birth_date DATE,
 weight     DECIMAL(10,2) NULL,
-  weight     DECIMAL(10,2) NULL,
   type_id INT(4) UNSIGNED NOT NULL,
   owner_id INT(4) UNSIGNED NOT NULL,
   INDEX(name),

@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS pets (
                                     name       TEXT,
                                     birth_date DATE,
 weight     DECIMAL(10,2) NULL,
-  weight     DECIMAL(10,2) NULL,
                                     type_id    INT NOT NULL REFERENCES types (id),
                                     owner_id   INT REFERENCES owners (id)
 );
