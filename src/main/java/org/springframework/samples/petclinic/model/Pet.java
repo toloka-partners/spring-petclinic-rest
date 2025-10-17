@@ -40,7 +40,7 @@ public class Pet extends NamedEntity {
     @Column(name = "birth_date", columnDefinition = "DATE")
     private LocalDate birthDate;
 
-    @Column(name = "weight")
+    @Column(name = "weight", precision = 10, scale = 2)
     @Digits(integer = 8, fraction = 2)
     private BigDecimal weight;
 
