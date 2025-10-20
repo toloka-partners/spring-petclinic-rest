@@ -38,6 +38,7 @@ import jakarta.transaction.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * @author Vitaliy Fedoriv
@@ -157,6 +158,12 @@ public class OwnerRestController implements OwnersApi {
                 currentPet.setBirthDate(petFieldsDto.getBirthDate());
                 currentPet.setName(petFieldsDto.getName());
                 currentPet.setType(petMapper.toPetType(petFieldsDto.getType()));
+                // Handle weight conversion
+            	if (petFieldsDto.getWeight() != null) {
+                	currentPet.setWeight(BigDecimal.valueOf(petFieldsDto.getWeight()));
+            	} else {
+                	currentPet.setWeight(null);
+            	}
                 this.clinicService.savePet(currentPet);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
