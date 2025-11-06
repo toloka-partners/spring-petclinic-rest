@@ -219,4 +219,97 @@ class PetRestControllerTests {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetPetWithWeightSuccess() throws Exception {
+        PetDto petWithWeight = pets.get(0);
+        petWithWeight.setWeight(15.75);
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithWeight));
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(15.75));
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetPetWithNullWeightSuccess() throws Exception {
+        PetDto petWithNullWeight = pets.get(0);
+        petWithNullWeight.setWeight(null);
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithNullWeight));
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.name").value("Rosy"));
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWithWeightSuccess() throws Exception {
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setWeight(22.5);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+        this.mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().contentType("application/json"))
+            .andExpect(status().isNoContent());
+
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.weight").value(22.5));
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWeightToNullSuccess() throws Exception {
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setWeight(null);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+        this.mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetAllPetsIncludesWeight() throws Exception {
+        PetDto pet1 = pets.get(0);
+        pet1.setWeight(10.5);
+        PetDto pet2 = pets.get(1);
+        pet2.setWeight(null);
+
+        final Collection<Pet> petsCollection = petMapper.toPets(this.pets);
+        when(this.clinicService.findAllPets()).thenReturn(petsCollection);
+
+        this.mockMvc.perform(get("/api/pets")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.[0].id").value(3))
+            .andExpect(jsonPath("$.[0].name").value("Rosy"))
+            .andExpect(jsonPath("$.[0].weight").value(10.5))
+            .andExpect(jsonPath("$.[1].id").value(4))
+            .andExpect(jsonPath("$.[1].name").value("Jewel"));
+    }
+
 }
