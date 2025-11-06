@@ -111,13 +111,15 @@ class OwnerRestControllerTests {
         pets.add(pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(28.5));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(null));
 
         visits = new ArrayList<>();
         VisitDto visit = new VisitDto();
@@ -138,7 +140,7 @@ class OwnerRestControllerTests {
     private PetDto getTestPetWithIdAndName(final OwnerDto owner, final int id, final String name) {
         PetTypeDto petType = new PetTypeDto();
         PetDto pet = new PetDto();
-        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).addVisitsItem(getTestVisitForPet(pet, 1));
+        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).weight(15.5).addVisitsItem(getTestVisitForPet(pet, 1));
         return pet;
     }
 
@@ -382,6 +384,22 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    void testCreatePetWithNegativeWeightError() throws Exception {
+        PetDto newPet = pets.get(0);
+        newPet.setId(999);
+        newPet.setWeight(-10.5);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.registerModule(new JavaTimeModule());
+        String newPetAsJSON = mapper.writeValueAsString(newPet);
+        this.mockMvc.perform(post("/api/owners/1/pets")
+                .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
     void testCreateVisitSuccess() throws Exception {
         VisitDto newVisit = visits.get(0);
         newVisit.setId(999);
@@ -406,7 +424,9 @@ class OwnerRestControllerTests {
         this.mockMvc.perform(get("/api/owners/2/pets/1")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"));
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(15.5));
     }
 
     @Test
@@ -440,6 +460,7 @@ class OwnerRestControllerTests {
         PetDto updatedPetDto = pets.get(0);
         updatedPetDto.setName("Rex");
         updatedPetDto.setBirthDate(LocalDate.of(2020, 1, 15));
+        updatedPetDto.setWeight(35.0);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));

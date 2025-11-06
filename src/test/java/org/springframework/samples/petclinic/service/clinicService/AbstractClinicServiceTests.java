@@ -23,6 +23,7 @@ import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -113,7 +114,16 @@ abstract class AbstractClinicServiceTests {
         Pet pet7 = this.clinicService.findPetById(7);
         assertThat(pet7.getName()).startsWith("Samantha");
         assertThat(pet7.getOwner().getFirstName()).isEqualTo("Jean");
+        assertThat(pet7.getWeight()).isEqualByComparingTo(new BigDecimal("5.2"));
 
+    }
+
+    @Test
+    void shouldFindPetWithCorrectIdAndNullWeight() {
+        Pet pet4 = this.clinicService.findPetById(4);
+        assertThat(pet4.getName()).isEqualTo("Jewel");
+        assertThat(pet4.getOwner().getLastName()).isEqualTo("Rodriquez");
+        assertThat(pet4.getWeight()).isNull();
     }
 
 //    @Test
@@ -133,10 +143,15 @@ abstract class AbstractClinicServiceTests {
         int found = owner6.getPets().size();
 
         Pet pet = new Pet();
-        pet.setName("bowser");
-        Collection<PetType> types = this.clinicService.findPetTypes();
-        pet.setType(EntityUtils.getById(types, PetType.class, 2));
-        pet.setBirthDate(LocalDate.now());
+        String newName = "bowser";
+        LocalDate newBirthDate = LocalDate.now();
+        BigDecimal newWeight = new BigDecimal("45.75");
+        PetType newType = EntityUtils.getById(this.clinicService.findPetTypes(), PetType.class, 2);
+
+        pet.setName(newName);
+        pet.setType(newType);
+        pet.setBirthDate(newBirthDate);
+        pet.setWeight(newWeight);
         owner6.addPet(pet);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
@@ -147,6 +162,15 @@ abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
+
+        // verify all fields were persisted correctly
+        Pet savedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(savedPet.getName()).isEqualTo(newName);
+        assertThat(savedPet.getBirthDate()).isEqualTo(newBirthDate);
+        assertThat(savedPet.getType().getId()).isEqualTo(newType.getId());
+        assertThat(savedPet.getType().getName()).isEqualTo(newType.getName());
+        assertThat(savedPet.getWeight()).isEqualByComparingTo(newWeight);
+        assertThat(savedPet.getOwner().getId()).isEqualTo(owner6.getId());
     }
 
     @Test
@@ -154,13 +178,31 @@ abstract class AbstractClinicServiceTests {
     void shouldUpdatePetName() throws Exception {
         Pet pet7 = this.clinicService.findPetById(7);
         String oldName = pet7.getName();
+        BigDecimal oldWeight = pet7.getWeight();
 
         String newName = oldName + "X";
+        BigDecimal newWeight = new BigDecimal("42.5");
         pet7.setName(newName);
+        pet7.setWeight(newWeight);
         this.clinicService.savePet(pet7);
 
         pet7 = this.clinicService.findPetById(7);
         assertThat(pet7.getName()).isEqualTo(newName);
+        assertThat(pet7.getWeight()).isEqualByComparingTo(newWeight);
+        assertThat(pet7.getWeight()).isNotEqualByComparingTo(oldWeight);
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdatePetWeightToNull() throws Exception {
+        Pet pet1 = this.clinicService.findPetById(1);
+        assertThat(pet1.getWeight()).isNotNull(); // pet 1 has weight initially
+
+        pet1.setWeight(null);
+        this.clinicService.savePet(pet1);
+
+        pet1 = this.clinicService.findPetById(1);
+        assertThat(pet1.getWeight()).isNull();
     }
 
     @Test
