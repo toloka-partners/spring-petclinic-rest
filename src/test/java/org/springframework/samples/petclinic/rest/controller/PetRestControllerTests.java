@@ -94,15 +94,13 @@ class PetRestControllerTests {
         pets.add(pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType)
-            .weight(15.75));
+            .type(petType));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType)
-            .weight(null));
+            .type(petType));
     }
 
     @Test
@@ -114,8 +112,7 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"))
-            .andExpect(jsonPath("$.weight").value(15.75));
+            .andExpect(jsonPath("$.name").value("Rosy"));
     }
 
     @Test
@@ -140,10 +137,8 @@ class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
-            .andExpect(jsonPath("$.[0].weight").value(15.75))
             .andExpect(jsonPath("$.[1].id").value(4))
-            .andExpect(jsonPath("$.[1].name").value("Jewel"))
-            .andExpect(jsonPath("$.[1].weight").isEmpty());
+            .andExpect(jsonPath("$.[1].name").value("Jewel"));
     }
 
     @Test
@@ -162,7 +157,6 @@ class PetRestControllerTests {
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         PetDto newPet = pets.get(0);
         newPet.setName("Rosy I");
-        newPet.setWeight(20.5);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -179,8 +173,7 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy I"))
-            .andExpect(jsonPath("$.weight").value(20.5));
+            .andExpect(jsonPath("$.name").value("Rosy I"));
 
     }
 
@@ -225,56 +218,5 @@ class PetRestControllerTests {
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNotFound());
     }
-
-    @Test
-    @WithMockUser(roles = "OWNER_ADMIN")
-    void testUpdatePetWithWeightSuccess() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
-        PetDto testPet = pets.get(0);
-        testPet.setWeight(25.0);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        String testPetAsJSON = mapper.writeValueAsString(testPet);
-        this.mockMvc.perform(put("/api/pets/3")
-                .content(testPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(content().contentType("application/json"))
-            .andExpect(status().isNoContent());
-
-        // Verify the weight was persisted
-        this.mockMvc.perform(get("/api/pets/3")
-                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andExpect(jsonPath("$.weight").value(25.0));
-    }
-
-    @Test
-    @WithMockUser(roles = "OWNER_ADMIN")
-    void testUpdatePetWithNullWeightSuccess() throws Exception {
-        given(this.clinicService.findPetById(4)).willReturn(petMapper.toPet(pets.get(1)));
-        PetDto testPet = pets.get(1);
-        testPet.setWeight(null);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        String testPetAsJSON = mapper.writeValueAsString(testPet);
-        this.mockMvc.perform(put("/api/pets/4")
-                .content(testPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(content().contentType("application/json"))
-            .andExpect(status().isNoContent());
-
-        // Verify null weight is handled correctly
-        this.mockMvc.perform(get("/api/pets/4")
-                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andExpect(jsonPath("$.weight").isEmpty());
-    }
-
 
 }
