@@ -38,6 +38,9 @@ public class Pet extends NamedEntity {
     @Column(name = "birth_date", columnDefinition = "DATE")
     private LocalDate birthDate;
 
+    @Column(name = "weight", nullable = true)
+    private Double weight;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "type_id")
     private PetType type;
@@ -55,6 +58,14 @@ public class Pet extends NamedEntity {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public Double getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
     }
 
     public PetType getType() {
