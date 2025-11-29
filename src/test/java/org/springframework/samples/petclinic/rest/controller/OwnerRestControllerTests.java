@@ -28,6 +28,7 @@ import org.springframework.samples.petclinic.mapper.OwnerMapper;
 import org.springframework.samples.petclinic.mapper.PetMapper;
 import org.springframework.samples.petclinic.mapper.VisitMapper;
 import org.springframework.samples.petclinic.model.Owner;
+import org.springframework.samples.petclinic.model.Pet;
 import org.springframework.samples.petclinic.rest.advice.ExceptionControllerAdvice;
 import org.springframework.samples.petclinic.rest.dto.OwnerDto;
 import org.springframework.samples.petclinic.rest.dto.PetDto;
@@ -48,6 +49,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -481,6 +483,7 @@ class OwnerRestControllerTests {
         PetDto petDto = pets.get(0);
         petDto.setName("Ghost");
         petDto.setBirthDate(LocalDate.of(2020, 1, 1));
+        petDto.setWeight(null);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -492,4 +495,81 @@ class OwnerRestControllerTests {
             .andExpect(status().isNotFound());
     }
 
+
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testCreatePet_ShouldAcceptWeight() throws Exception {
+        // Given
+        PetDto newPet = pets.get(0);
+        newPet.setId(999);
+        newPet.setWeight(5.75); // Double value
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        String newPetAsJSON = mapper.writeValueAsString(newPet);
+
+        // When & Then
+        this.mockMvc.perform(post("/api/owners/1/pets")
+                .content(newPetAsJSON)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isCreated());
+    }
+
+
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetOwnerPet_ShouldHandleNullWeight() throws Exception {
+        // Given - Weight is null (valid scenario)
+        int ownerId = 2;
+        int petId = 1;
+
+        var owner = ownerMapper.toOwner(owners.get(0));
+        given(this.clinicService.findOwnerById(ownerId)).willReturn(owner);
+
+        var pet = petMapper.toPet(pets.get(0));
+        pet.setOwner(owner);
+        pet.setWeight(null); // Explicitly set weight to null
+
+        given(this.clinicService.findPetById(petId)).willReturn(pet);
+
+        // When & Then - null weight is perfectly valid
+        this.mockMvc.perform(get("/api/owners/" + ownerId + "/pets/" + petId)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(petId))
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").isEmpty()); // null is empty in JSON
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetOwnerPet_WeightFieldIsOptionalAndNullable() throws Exception {
+        // Given
+        int ownerId = 2;
+        int petId = 1;
+
+        var owner = ownerMapper.toOwner(owners.get(0));
+        given(this.clinicService.findOwnerById(ownerId)).willReturn(owner);
+
+        var pet = petMapper.toPet(pets.get(0));
+        pet.setOwner(owner);
+        pet.setWeight(null); // Set weight to null
+
+        given(this.clinicService.findPetById(petId)).willReturn(pet);
+
+        // When & Then
+        this.mockMvc.perform(get("/api/owners/" + ownerId + "/pets/" + petId)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(petId))
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(nullValue())); // Field exists with null value
+    }
 }

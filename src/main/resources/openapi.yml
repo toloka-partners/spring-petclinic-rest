@@ -1955,6 +1955,15 @@ components:
           example: '2010-09-07'
         type:
           $ref: '#/components/schemas/PetType'
+        weight: # ← ADD THIS
+          title: Weight
+          description: The weight of the pet in kilograms.
+          type: number
+          format: double
+          x-openapi-format: bigdecimal
+          example: 15.75
+          nullable: true
+          default: null
       required:
         - name
         - birthDate
@@ -1988,6 +1997,16 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Visit'
+              readOnly: true
+            weight: # ← ADD THIS (if you want it in both places, or rely on inheritance from PetFields)
+              title: Weight
+              description: The weight of the pet in kilograms.
+              type: number
+              format: double
+              x-openapi-format: bigdecimal
+              example: 15.75
+              nullable: true
+              default: null
               readOnly: true
           required:
             - id

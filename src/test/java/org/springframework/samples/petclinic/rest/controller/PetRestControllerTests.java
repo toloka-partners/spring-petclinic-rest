@@ -60,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ContextConfiguration(classes = ApplicationTestConfig.class)
 @WebAppConfiguration
-class PetRestControllerTests {
+public class PetRestControllerTests {
 
     @MockitoBean
     protected ClinicService clinicService;
@@ -217,6 +217,65 @@ class PetRestControllerTests {
         this.mockMvc.perform(delete("/api/pets/999")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetPet_ShouldIncludeWeightField() throws Exception {
+        // Given - Add weight to the test pet as Double
+        PetDto petWithWeight = pets.get(0);
+        petWithWeight.setWeight(15.75); // Explicit Double
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithWeight));
+
+        // When & Then
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(15.75));
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetPet_ShouldHandleNullWeight() throws Exception {
+        // Given - Pet with null Double weight
+        PetDto petWithNullWeight = pets.get(0);
+        petWithNullWeight.setWeight(null); // null Double
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithNullWeight));
+
+        // When & Then
+        this.mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(3))
+            .andExpect(jsonPath("$.weight").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePet_ShouldAcceptWeight() throws Exception {
+        // Given
+        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setName("Rosy Updated");
+        updatedPet.setWeight(12.5); // Double value
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
+
+        // When & Then
+        this.mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetAsJSON)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isNoContent());
     }
 
 }
