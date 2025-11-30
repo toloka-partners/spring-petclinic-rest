@@ -94,13 +94,15 @@ public class PetRestControllerTests {
         pets.add(pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(15.5f));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(12.75f));
     }
 
     @Test
@@ -112,7 +114,8 @@ public class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"));
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(15.5));
     }
 
     @Test
@@ -137,8 +140,10 @@ public class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
+            .andExpect(jsonPath("$.[0].weight").value(15.5))
             .andExpect(jsonPath("$.[1].id").value(4))
-            .andExpect(jsonPath("$.[1].name").value("Jewel"));
+            .andExpect(jsonPath("$.[1].name").value("Jewel"))
+            .andExpect(jsonPath("$.[1].weight").value(12.75));
     }
 
     @Test
@@ -157,6 +162,7 @@ public class PetRestControllerTests {
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         PetDto newPet = pets.get(0);
         newPet.setName("Rosy I");
+        newPet.setWeight(16.0f);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -173,7 +179,8 @@ public class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy I"));
+            .andExpect(jsonPath("$.name").value("Rosy I"))
+            .andExpect(jsonPath("$.weight").value(16.0));
 
     }
 
@@ -225,7 +232,7 @@ public class PetRestControllerTests {
     void testGetPet_ShouldIncludeWeightField() throws Exception {
         // Given - Add weight to the test pet as Double
         PetDto petWithWeight = pets.get(0);
-        petWithWeight.setWeight(15.75); // Explicit Double
+        petWithWeight.setWeight(15.75f); // Explicit Double
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithWeight));
 
         // When & Then
@@ -243,7 +250,7 @@ public class PetRestControllerTests {
     void testGetPet_ShouldHandleNullWeight() throws Exception {
         // Given - Pet with null Double weight
         PetDto petWithNullWeight = pets.get(0);
-        petWithNullWeight.setWeight(null); // null Double
+        petWithNullWeight.setWeight(null);
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithNullWeight));
 
         // When & Then
@@ -262,7 +269,7 @@ public class PetRestControllerTests {
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         PetDto updatedPet = pets.get(0);
         updatedPet.setName("Rosy Updated");
-        updatedPet.setWeight(12.5); // Double value
+        updatedPet.setWeight(12.5f);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());

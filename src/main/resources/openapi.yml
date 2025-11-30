@@ -1998,14 +1998,12 @@ components:
               items:
                 $ref: '#/components/schemas/Visit'
               readOnly: true
-            weight: # ← ADD THIS (if you want it in both places, or rely on inheritance from PetFields)
+            weight:
               title: Weight
               description: The weight of the pet in kilograms.
               type: number
-              format: double
-              x-openapi-format: bigdecimal
+              format: float
               example: 15.75
-              nullable: true
               default: null
               readOnly: true
           required:

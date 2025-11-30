@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS pets (
                                     birth_date DATE,
                                     type_id    INT NOT NULL REFERENCES types (id),
                                     owner_id   INT REFERENCES owners (id),
-                                    weight     DOUBLE PRECISION
+                                    weight DECIMAL(5,2)
 );
 CREATE INDEX ON pets (name);
 CREATE INDEX ON pets (owner_id);

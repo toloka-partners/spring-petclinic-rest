@@ -113,13 +113,15 @@ class OwnerRestControllerTests {
         pets.add(pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(15.5f));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(12.75f));
 
         visits = new ArrayList<>();
         VisitDto visit = new VisitDto();
@@ -140,7 +142,7 @@ class OwnerRestControllerTests {
     private PetDto getTestPetWithIdAndName(final OwnerDto owner, final int id, final String name) {
         PetTypeDto petType = new PetTypeDto();
         PetDto pet = new PetDto();
-        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).addVisitsItem(getTestVisitForPet(pet, 1));
+        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).weight(14.0f).addVisitsItem(getTestVisitForPet(pet, 1));
         return pet;
     }
 
@@ -503,7 +505,7 @@ class OwnerRestControllerTests {
         // Given
         PetDto newPet = pets.get(0);
         newPet.setId(999);
-        newPet.setWeight(5.75); // Double value
+        newPet.setWeight(5.75f); // Double value
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
