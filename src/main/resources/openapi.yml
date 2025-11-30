@@ -1959,8 +1959,7 @@ components:
           title: Weight
           description: The weight of the pet in kilograms.
           type: number
-          format: double
-          x-openapi-format: bigdecimal
+          format: float
           example: 15.75
           nullable: true
           default: null
