@@ -60,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ContextConfiguration(classes = ApplicationTestConfig.class)
 @WebAppConfiguration
-class PetRestControllerTests {
+public class PetRestControllerTests {
 
     @MockitoBean
     protected ClinicService clinicService;
