@@ -142,7 +142,7 @@ class OwnerRestControllerTests {
     private PetDto getTestPetWithIdAndName(final OwnerDto owner, final int id, final String name) {
         PetTypeDto petType = new PetTypeDto();
         PetDto pet = new PetDto();
-        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).weight(14.0f).addVisitsItem(getTestVisitForPet(pet, 1));
+        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).addVisitsItem(getTestVisitForPet(pet, 1));
         return pet;
     }
 
@@ -533,9 +533,17 @@ class OwnerRestControllerTests {
         var owner = ownerMapper.toOwner(owners.get(0));
         given(this.clinicService.findOwnerById(ownerId)).willReturn(owner);
 
-        var pet = petMapper.toPet(pets.get(0));
+        // Create a NEW pet with null weight, don't reuse from the list
+        PetDto petDto = new PetDto();
+        petDto.setId(petId);
+        petDto.setName("Rosy");
+        petDto.setBirthDate(LocalDate.now());
+        petDto.setType(pets.get(0).getType());
+        petDto.setWeight(null); // Explicitly set weight to null
+
+        var pet = petMapper.toPet(petDto);
         pet.setOwner(owner);
-        pet.setWeight(null); // Explicitly set weight to null
+        pet.setWeight(null); // Double ensure weight is null
 
         given(this.clinicService.findPetById(petId)).willReturn(pet);
 
