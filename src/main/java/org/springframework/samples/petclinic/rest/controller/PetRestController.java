@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * @author Vitaliy Fedoriv
@@ -80,6 +81,7 @@ public class PetRestController implements PetsApi {
         currentPet.setBirthDate(petDto.getBirthDate());
         currentPet.setName(petDto.getName());
         currentPet.setType(petMapper.toPetType(petDto.getType()));
+        currentPet.setWeight(petDto.getWeight() != null ? BigDecimal.valueOf(petDto.getWeight()) : null);        
         this.clinicService.savePet(currentPet);
         return new ResponseEntity<>(petMapper.toPetDto(currentPet), HttpStatus.NO_CONTENT);
     }

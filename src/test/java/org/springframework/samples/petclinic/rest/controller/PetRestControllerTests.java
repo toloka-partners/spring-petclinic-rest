@@ -44,6 +44,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
@@ -91,16 +92,20 @@ class PetRestControllerTests {
             .name("dog");
 
         PetDto pet = new PetDto();
-        pets.add(pet.id(3)
+        pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType);
+        pet.setWeight(new BigDecimal("17.54"));
+        pets.add(pet);
 
         pet = new PetDto();
-        pets.add(pet.id(4)
+        pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(null);
+        pets.add(pet);
     }
 
     @Test
@@ -112,7 +117,8 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"));
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(17.54));
     }
 
     @Test
@@ -138,7 +144,8 @@ class PetRestControllerTests {
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
             .andExpect(jsonPath("$.[1].id").value(4))
-            .andExpect(jsonPath("$.[1].name").value("Jewel"));
+            .andExpect(jsonPath("$.[1].name").value("Jewel"))
+            .andExpect(jsonPath("$.[1].weight").isEmpty());    
     }
 
     @Test

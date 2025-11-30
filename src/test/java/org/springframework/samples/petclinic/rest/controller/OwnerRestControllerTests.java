@@ -47,6 +47,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -108,16 +109,20 @@ class OwnerRestControllerTests {
 
         pets = new ArrayList<>();
         PetDto pet = new PetDto();
-        pets.add(pet.id(3)
+        pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType);
+        pet.setWeight(new BigDecimal("18.29"));
+        pets.add(pet);
 
         pet = new PetDto();
-        pets.add(pet.id(4)
+        pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType));
+            .type(petType)
+            .weight(null);
+        pets.add(pet);
 
         visits = new ArrayList<>();
         VisitDto visit = new VisitDto();
@@ -138,7 +143,7 @@ class OwnerRestControllerTests {
     private PetDto getTestPetWithIdAndName(final OwnerDto owner, final int id, final String name) {
         PetTypeDto petType = new PetTypeDto();
         PetDto pet = new PetDto();
-        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).addVisitsItem(getTestVisitForPet(pet, 1));
+        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).weight(BigDecimal.valueOf(13.50)).addVisitsItem(getTestVisitForPet(pet, 1));
         return pet;
     }
 
@@ -370,6 +375,7 @@ class OwnerRestControllerTests {
         PetDto newPet = pets.get(0);
         newPet.setId(null);
         newPet.setName(null);
+        newPet.setWeight(null);
         ObjectMapper mapper = new ObjectMapper();
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
