@@ -287,7 +287,6 @@ public class PetRestControllerTests {
             .andExpect(status().isNoContent());
     }
 
-
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePetWithDecimalWeightSuccess() throws Exception {
@@ -319,5 +318,4 @@ public class PetRestControllerTests {
             .andExpect(jsonPath("$.name").value("Rosy III"))
             .andExpect(jsonPath("$.weight").value(22.47));
     }
-
 }
