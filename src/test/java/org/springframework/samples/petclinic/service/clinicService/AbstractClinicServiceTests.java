@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -137,6 +138,7 @@ abstract class AbstractClinicServiceTests {
         Collection<PetType> types = this.clinicService.findPetTypes();
         pet.setType(EntityUtils.getById(types, PetType.class, 2));
         pet.setBirthDate(LocalDate.now());
+        pet.setWeight(new BigDecimal("25.50"));
         owner6.addPet(pet);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
@@ -147,6 +149,8 @@ abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
+        Pet savedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(savedPet.getWeight()).isEqualTo(new BigDecimal("25.50"));
     }
 
     @Test
@@ -499,6 +503,113 @@ abstract class AbstractClinicServiceTests {
                     actual -> actual.getName().equals(expected.getName())
                     && actual.getId().equals(expected.getId()))).isTrue();
         }
+    }
+
+    @Test
+    @Transactional
+    void shouldInsertPetWithNullWeight() {
+        Owner owner6 = this.clinicService.findOwnerById(6);
+        int found = owner6.getPets().size();
+
+        Pet pet = new Pet();
+        pet.setName("weightless");
+        Collection<PetType> types = this.clinicService.findPetTypes();
+        pet.setType(EntityUtils.getById(types, PetType.class, 1));
+        pet.setBirthDate(LocalDate.now());
+        pet.setWeight(null);
+        owner6.addPet(pet);
+
+        this.clinicService.savePet(pet);
+        this.clinicService.saveOwner(owner6);
+
+        Pet savedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(savedPet.getWeight()).isNull();
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdatePetWeight() throws Exception {
+        Pet pet7 = this.clinicService.findPetById(7);
+        BigDecimal oldWeight = pet7.getWeight();
+
+        BigDecimal newWeight = new BigDecimal("30.75");
+        pet7.setWeight(newWeight);
+        this.clinicService.savePet(pet7);
+
+        pet7 = this.clinicService.findPetById(7);
+        assertThat(pet7.getWeight()).isEqualTo(newWeight);
+        assertThat(pet7.getWeight()).isNotEqualTo(oldWeight);
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdatePetWeightToNull() throws Exception {
+        Pet pet7 = this.clinicService.findPetById(7);
+        pet7.setWeight(null);
+        this.clinicService.savePet(pet7);
+
+        pet7 = this.clinicService.findPetById(7);
+        assertThat(pet7.getWeight()).isNull();
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdatePetWeightFromNull() throws Exception {
+        Pet pet = new Pet();
+        pet.setName("testWeightUpdate");
+        Collection<PetType> types = this.clinicService.findPetTypes();
+        pet.setType(EntityUtils.getById(types, PetType.class, 1));
+        pet.setBirthDate(LocalDate.now());
+        pet.setWeight(null);
+
+        Owner owner6 = this.clinicService.findOwnerById(6);
+        owner6.addPet(pet);
+        this.clinicService.savePet(pet);
+        this.clinicService.saveOwner(owner6);
+
+        // Verify pet was saved with null weight
+        Pet savedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(savedPet.getWeight()).isNull();
+
+        // Update weight from null to a value
+        BigDecimal newWeight = new BigDecimal("12.25");
+        savedPet.setWeight(newWeight);
+        this.clinicService.savePet(savedPet);
+
+        // Verify weight was updated
+        Pet updatedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(updatedPet.getWeight()).isEqualTo(newWeight);
+    }
+
+    @Test
+    void shouldFindPetWithWeight() {
+        Pet pet1 = this.clinicService.findPetById(1);
+        assertThat(pet1.getName()).isEqualTo("Leo");
+        assertThat(pet1.getWeight()).isNotNull();
+        assertThat(pet1.getWeight()).isGreaterThan(BigDecimal.ZERO);
+    }
+
+    @Test
+    void shouldFindPetWithNullWeight() {
+        Pet pet4 = this.clinicService.findPetById(4);
+        assertThat(pet4.getName()).isEqualTo("Jewel");
+        assertThat(pet4.getWeight()).isNull();
+    }
+
+    @Test
+    void shouldFindAllPetsWithWeightInformation(){
+        Collection<Pet> pets = this.clinicService.findAllPets();
+        Pet pet1 = EntityUtils.getById(pets, Pet.class, 1);
+        assertThat(pet1.getName()).isEqualTo("Leo");
+        assertThat(pet1.getWeight()).isNotNull();
+
+        Pet pet4 = EntityUtils.getById(pets, Pet.class, 4);
+        assertThat(pet4.getName()).isEqualTo("Jewel");
+        assertThat(pet4.getWeight()).isNull();
+
+        Pet pet3 = EntityUtils.getById(pets, Pet.class, 3);
+        assertThat(pet3.getName()).isEqualTo("Rosy");
+        assertThat(pet3.getWeight()).isNotNull();
     }
 
     void clearCache() {}
