@@ -44,20 +44,20 @@ INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES
 ('Carlos', 'Estaban', '2335 Independence La.', 'Waunakee', '6085555487');
 
 -- Insert Pets
-INSERT INTO pets (name, birth_date, type_id, owner_id) VALUES 
-('Leo', '2010-09-07', 1, 1),
-('Basil', '2012-08-06', 6, 2),
-('Rosy', '2011-04-17', 2, 3),
-('Jewel', '2010-03-07', 2, 3),
-('Iggy', '2010-11-30', 3, 4),
-('George', '2010-01-20', 4, 5),
-('Samantha', '2012-09-04', 1, 6),
-('Max', '2012-09-04', 1, 6),
-('Lucky', '2011-08-06', 5, 7),
-('Mulligan', '2007-02-24', 2, 8),
-('Freddy', '2010-03-09', 5, 9),
-('Lucky', '2010-06-24', 2, 10),
-('Sly', '2012-06-08', 1, 10);
+INSERT INTO pets (name, birth_date, type_id, owner_id, weight) VALUES
+('Leo', '2010-09-07', 1, 1, 4.2),
+('Basil', '2012-08-06', 6, 2, 0.3),
+('Rosy', '2011-04-17', 2, 3, 15.4),
+('Jewel', '2010-03-07', 2, 3, NULL),
+('Iggy', '2010-11-30', 3, 4, 2.1),
+('George', '2010-01-20', 4, 5, 1.8),
+('Samantha', '2012-09-04', 1, 6, 3.9),
+('Max', '2012-09-04', 1, 6, 4.1),
+('Lucky', '2011-08-06', 5, 7, 0.8),
+('Mulligan', '2007-02-24', 2, 8, 22.5),
+('Freddy', '2010-03-09', 5, 9, 0.9),
+('Lucky', '2010-06-24', 2, 10, 18.7),
+('Sly', '2012-06-08', 1, 10, 3.6);
 
 -- Insert Visits
 INSERT INTO visits (pet_id, visit_date, description) VALUES 
