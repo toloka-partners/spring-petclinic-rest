@@ -178,7 +178,6 @@ public class PetRestControllerTests {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         String updatedPetJson = mapper.writeValueAsString(updatedPetDto);
 
-        // 4. Perform the PUT update
         mockMvc.perform(put("/api/pets/3")
                 .content(updatedPetJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -194,7 +193,7 @@ public class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
             .andExpect(jsonPath("$.name").value("Rosy I"))
-            .andExpect(jsonPath("$.weight").value(16.0)); // This will now PASS
+            .andExpect(jsonPath("$.weight").value(16.0));
     }
 
     @Test
