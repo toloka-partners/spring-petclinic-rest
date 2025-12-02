@@ -21,8 +21,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -70,6 +68,8 @@ public class PetRestControllerTests {
     private PetRestController petRestController;
     @Autowired
     private PetMapper petMapper;
+    @Autowired
+    protected ClinicService clinicServices;
     private MockMvc mockMvc;
 
     private List<PetDto> pets;
@@ -110,7 +110,7 @@ public class PetRestControllerTests {
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetPetSuccess() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         this.mockMvc.perform(get("/api/pets/3")
                 .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
@@ -123,7 +123,7 @@ public class PetRestControllerTests {
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetPetNotFound() throws Exception {
-        given(petMapper.toPetDto(this.clinicService.findPetById(999))).willReturn(null);
+        given(petMapper.toPetDto(this.clinicServices.findPetById(999))).willReturn(null);
         this.mockMvc.perform(get("/api/pets/999")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -134,7 +134,7 @@ public class PetRestControllerTests {
     void testGetAllPetsSuccess() throws Exception {
         final Collection<Pet> pets = petMapper.toPets(this.pets);
         System.err.println(pets);
-        when(this.clinicService.findAllPets()).thenReturn(pets);
+        when(this.clinicServices.findAllPets()).thenReturn(pets);
         //given(this.clinicService.findAllPets()).willReturn(petMapper.toPets(pets));
         this.mockMvc.perform(get("/api/pets")
                 .accept(MediaType.APPLICATION_JSON))
@@ -152,7 +152,7 @@ public class PetRestControllerTests {
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetAllPetsNotFound() throws Exception {
         pets.clear();
-        given(this.clinicService.findAllPets()).willReturn(petMapper.toPets(pets));
+        given(this.clinicServices.findAllPets()).willReturn(petMapper.toPets(pets));
         this.mockMvc.perform(get("/api/pets")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -161,7 +161,7 @@ public class PetRestControllerTests {
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePetSuccess() throws Exception {
-        given(this.clinicService.findPetById(3))
+        given(this.clinicServices.findPetById(3))
             .willReturn(petMapper.toPet(pets.get(0)));
 
         PetDto updatedPetDto = new PetDto()
@@ -184,7 +184,7 @@ public class PetRestControllerTests {
                 .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNoContent());
 
-        given(this.clinicService.findPetById(3))
+        given(this.clinicServices.findPetById(3))
             .willReturn(petMapper.toPet(updatedPetDto));
 
         mockMvc.perform(get("/api/pets/3")
@@ -219,7 +219,7 @@ public class PetRestControllerTests {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String newPetAsJSON = mapper.writeValueAsString(newPet);
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         this.mockMvc.perform(delete("/api/pets/3")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNoContent());
@@ -232,7 +232,7 @@ public class PetRestControllerTests {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String newPetAsJSON = mapper.writeValueAsString(newPet);
-        given(this.clinicService.findPetById(999)).willReturn(null);
+        given(this.clinicServices.findPetById(999)).willReturn(null);
         this.mockMvc.perform(delete("/api/pets/999")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNotFound());
@@ -245,7 +245,7 @@ public class PetRestControllerTests {
         // Given - Add weight to the test pet as Double
         PetDto petWithWeight = pets.get(0);
         petWithWeight.setWeight(15.75f); // Explicit Double
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithWeight));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(petWithWeight));
 
         // When & Then
         this.mockMvc.perform(get("/api/pets/3")
@@ -263,7 +263,7 @@ public class PetRestControllerTests {
         // Given - Pet with null Double weight
         PetDto petWithNullWeight = pets.get(0);
         petWithNullWeight.setWeight(null);
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(petWithNullWeight));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(petWithNullWeight));
 
         // When & Then
         this.mockMvc.perform(get("/api/pets/3")
@@ -278,7 +278,7 @@ public class PetRestControllerTests {
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePet_ShouldAcceptWeight() throws Exception {
         // Given
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         PetDto updatedPet = pets.get(0);
         updatedPet.setName("Rosy Updated");
         updatedPet.setWeight(12.5f);
@@ -307,7 +307,7 @@ public class PetRestControllerTests {
         updatedPetDto.setWeight(22.47f);
 
         // Mock to return the UPDATED pet (not the original)
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(updatedPetDto));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(updatedPetDto));
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
