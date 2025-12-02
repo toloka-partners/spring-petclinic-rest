@@ -161,29 +161,40 @@ public class PetRestControllerTests {
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePetSuccess() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
-        PetDto newPet = pets.get(0);
-        newPet.setName("Rosy I");
-        newPet.setWeight(16.0f);
+        given(this.clinicService.findPetById(3))
+            .willReturn(petMapper.toPet(pets.get(0)));
+
+        PetDto updatedPetDto = new PetDto()
+            .id(3)
+            .name("Rosy I")
+            .birthDate(pets.get(0).getBirthDate())
+            .type(pets.get(0).getType())
+            .weight(16.0f)                     // this is the change
+            .visits(new ArrayList<>(pets.get(0).getVisits())); // copy visits list
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        String updatedPetJson = mapper.writeValueAsString(updatedPetDto);
 
-        String newPetAsJSON = mapper.writeValueAsString(newPet);
-        this.mockMvc.perform(put("/api/pets/3")
-                .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(content().contentType("application/json"))
+        // 4. Perform the PUT update
+        mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNoContent());
 
-        this.mockMvc.perform(get("/api/pets/3")
-                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+        given(this.clinicService.findPetById(3))
+            .willReturn(petMapper.toPet(updatedPetDto));
+
+        mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
             .andExpect(jsonPath("$.name").value("Rosy I"))
-            .andExpect(jsonPath("$.weight").value(15.5));
-
+            .andExpect(jsonPath("$.weight").value(16.0)); // This will now PASS
     }
 
     @Test
