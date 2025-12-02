@@ -46,6 +46,9 @@ public class Pet extends NamedEntity {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
+    @Column(name = "weight")
+    private Float weight;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
     private Set<Visit> visits;
 
@@ -71,6 +74,14 @@ public class Pet extends NamedEntity {
 
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    public Float getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(Float weight) {
+        this.weight = weight;
     }
 
     protected Set<Visit> getVisitsInternal() {

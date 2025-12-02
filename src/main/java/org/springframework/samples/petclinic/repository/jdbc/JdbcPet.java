@@ -29,6 +29,8 @@ public class JdbcPet extends Pet {
 
     private int ownerId;
 
+    private Float weight;
+
     public int getTypeId() {
         return this.typeId;
     }
@@ -43,6 +45,14 @@ public class JdbcPet extends Pet {
 
     public void setOwnerId(int ownerId) {
         this.ownerId = ownerId;
+    }
+
+    public Float getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(Float weight) {
+        this.weight = weight;
     }
 
 }
