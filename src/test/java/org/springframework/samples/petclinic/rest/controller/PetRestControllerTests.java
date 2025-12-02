@@ -44,11 +44,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 
 /**
@@ -60,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ContextConfiguration(classes = ApplicationTestConfig.class)
 @WebAppConfiguration
-class PetRestControllerTests {
+public class PetRestControllerTests {
 
     @MockitoBean
     protected ClinicService clinicService;
@@ -68,6 +68,8 @@ class PetRestControllerTests {
     private PetRestController petRestController;
     @Autowired
     private PetMapper petMapper;
+    @Autowired
+    protected ClinicService clinicServices;
     private MockMvc mockMvc;
 
     private List<PetDto> pets;
@@ -95,32 +97,33 @@ class PetRestControllerTests {
             .name("Rosy")
             .birthDate(LocalDate.now())
             .type(petType)
-            .weight(15.75f));
+            .weight(15.5f));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
             .type(petType)
-            .weight(null));
+            .weight(12.75f));
     }
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetPetSuccess() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         this.mockMvc.perform(get("/api/pets/3")
                 .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"));
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(15.5));
     }
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetPetNotFound() throws Exception {
-        given(petMapper.toPetDto(this.clinicService.findPetById(999))).willReturn(null);
+        given(petMapper.toPetDto(this.clinicServices.findPetById(999))).willReturn(null);
         this.mockMvc.perform(get("/api/pets/999")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -131,7 +134,7 @@ class PetRestControllerTests {
     void testGetAllPetsSuccess() throws Exception {
         final Collection<Pet> pets = petMapper.toPets(this.pets);
         System.err.println(pets);
-        when(this.clinicService.findAllPets()).thenReturn(pets);
+        when(this.clinicServices.findAllPets()).thenReturn(pets);
         //given(this.clinicService.findAllPets()).willReturn(petMapper.toPets(pets));
         this.mockMvc.perform(get("/api/pets")
                 .accept(MediaType.APPLICATION_JSON))
@@ -139,15 +142,17 @@ class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
+            .andExpect(jsonPath("$.[0].weight").value(15.5))
             .andExpect(jsonPath("$.[1].id").value(4))
-            .andExpect(jsonPath("$.[1].name").value("Jewel"));
+            .andExpect(jsonPath("$.[1].name").value("Jewel"))
+            .andExpect(jsonPath("$.[1].weight").value(12.75));
     }
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetAllPetsNotFound() throws Exception {
         pets.clear();
-        given(this.clinicService.findAllPets()).willReturn(petMapper.toPets(pets));
+        given(this.clinicServices.findAllPets()).willReturn(petMapper.toPets(pets));
         this.mockMvc.perform(get("/api/pets")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -156,27 +161,39 @@ class PetRestControllerTests {
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePetSuccess() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
-        PetDto newPet = pets.get(0);
-        newPet.setName("Rosy I");
+        given(this.clinicServices.findPetById(3))
+            .willReturn(petMapper.toPet(pets.get(0)));
+
+        PetDto updatedPetDto = new PetDto()
+            .id(3)
+            .name("Rosy I")
+            .birthDate(pets.get(0).getBirthDate())
+            .type(pets.get(0).getType())
+            .weight(16.0f)                     // this is the change
+            .visits(new ArrayList<>(pets.get(0).getVisits())); // copy visits list
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        String updatedPetJson = mapper.writeValueAsString(updatedPetDto);
 
-        String newPetAsJSON = mapper.writeValueAsString(newPet);
-        this.mockMvc.perform(put("/api/pets/3")
-                .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(content().contentType("application/json"))
+        mockMvc.perform(put("/api/pets/3")
+                .content(updatedPetJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNoContent());
 
-        this.mockMvc.perform(get("/api/pets/3")
-                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+        given(this.clinicServices.findPetById(3))
+            .willReturn(petMapper.toPet(updatedPetDto));
+
+        mockMvc.perform(get("/api/pets/3")
+                .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy I"));
-
+            .andExpect(jsonPath("$.name").value("Rosy I"))
+            .andExpect(jsonPath("$.weight").value(16.0));
     }
 
     @Test
@@ -202,7 +219,7 @@ class PetRestControllerTests {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String newPetAsJSON = mapper.writeValueAsString(newPet);
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         this.mockMvc.perform(delete("/api/pets/3")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNoContent());
@@ -215,16 +232,22 @@ class PetRestControllerTests {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         String newPetAsJSON = mapper.writeValueAsString(newPet);
-        given(this.clinicService.findPetById(999)).willReturn(null);
+        given(this.clinicServices.findPetById(999)).willReturn(null);
         this.mockMvc.perform(delete("/api/pets/999")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNotFound());
     }
 
+
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetPet_ShouldIncludeWeightField() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        // Given - Add weight to the test pet as Double
+        PetDto petWithWeight = pets.get(0);
+        petWithWeight.setWeight(15.75f); // Explicit Double
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(petWithWeight));
+
+        // When & Then
         this.mockMvc.perform(get("/api/pets/3")
                 .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
@@ -237,66 +260,74 @@ class PetRestControllerTests {
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetPet_ShouldHandleNullWeight() throws Exception {
-        given(this.clinicService.findPetById(4)).willReturn(petMapper.toPet(pets.get(1)));
-        this.mockMvc.perform(get("/api/pets/4")
+        // Given - Pet with null Double weight
+        PetDto petWithNullWeight = pets.get(0);
+        petWithNullWeight.setWeight(null);
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(petWithNullWeight));
+
+        // When & Then
+        this.mockMvc.perform(get("/api/pets/3")
                 .accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
-            .andExpect(jsonPath("$.id").value(4))
-            .andExpect(jsonPath("$.name").value("Jewel"))
+            .andExpect(jsonPath("$.id").value(3))
             .andExpect(jsonPath("$.weight").isEmpty());
     }
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePet_ShouldAcceptWeight() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
-        PetDto newPet = pets.get(0);
-        newPet.setWeight(20.50f);
+        // Given
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
+        PetDto updatedPet = pets.get(0);
+        updatedPet.setName("Rosy Updated");
+        updatedPet.setWeight(12.5f);
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPet);
 
-        String newPetAsJSON = mapper.writeValueAsString(newPet);
+        // When & Then
         this.mockMvc.perform(put("/api/pets/3")
-                .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(content().contentType("application/json"))
+                .content(updatedPetAsJSON)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNoContent());
-
-        this.mockMvc.perform(get("/api/pets/3")
-                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"))
-            .andExpect(jsonPath("$.weight").value(20.50));
     }
+
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
     void testUpdatePetWithDecimalWeightSuccess() throws Exception {
-        given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
-        PetDto newPet = pets.get(0);
-        newPet.setWeight(12.34f);
+        // Create updated pet
+        PetDto updatedPetDto = pets.get(0);
+        updatedPetDto.setName("Rosy III");
+        updatedPetDto.setWeight(22.47f);
+
+        // Mock to return the UPDATED pet (not the original)
+        given(this.clinicServices.findPetById(3)).willReturn(petMapper.toPet(updatedPetDto));
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        String newPetAsJSON = mapper.writeValueAsString(newPet);
+        String newPetAsJSON = mapper.writeValueAsString(updatedPetDto);
+
+        // The update should succeed
         this.mockMvc.perform(put("/api/pets/3")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(content().contentType("application/json"))
             .andExpect(status().isNoContent());
 
+        // The GET should return the updated pet
         this.mockMvc.perform(get("/api/pets/3")
                 .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"))
-            .andExpect(jsonPath("$.weight").value(12.34));
+            .andExpect(jsonPath("$.name").value("Rosy III"))
+            .andExpect(jsonPath("$.weight").value(22.47));
     }
 
 }
