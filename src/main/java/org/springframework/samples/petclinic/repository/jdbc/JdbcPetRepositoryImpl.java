@@ -110,7 +110,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
         } else {
             this.namedParameterJdbcTemplate.update(
                 "UPDATE pets SET name=:name, birth_date=:birth_date, type_id=:type_id, " +
-                    "owner_id=:owner_id, weight=: weight WHERE id=:id",
+                    "owner_id=:owner_id, weight=:weight WHERE id=:id",
                 createPetParameterSource(pet));
         }
     }
