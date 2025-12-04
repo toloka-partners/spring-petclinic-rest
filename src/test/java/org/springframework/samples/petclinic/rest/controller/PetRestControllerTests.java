@@ -39,6 +39,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -93,12 +94,14 @@ class PetRestControllerTests {
         PetDto pet = new PetDto();
         pets.add(pet.id(3)
             .name("Rosy")
+            .weight(new BigDecimal("12.34"))
             .birthDate(LocalDate.now())
             .type(petType));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
+            .weight(null)
             .birthDate(LocalDate.now())
             .type(petType));
     }
@@ -112,7 +115,8 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"));
+            .andExpect(jsonPath("$.name").value("Rosy"))
+            .andExpect(jsonPath("$.weight").value(12.34));
     }
 
     @Test
@@ -137,8 +141,10 @@ class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
+            .andExpect(jsonPath("$.[0].weight").value(12.34))
             .andExpect(jsonPath("$.[1].id").value(4))
-            .andExpect(jsonPath("$.[1].name").value("Jewel"));
+            .andExpect(jsonPath("$.[1].name").value("Jewel"))
+            .andExpect(jsonPath("$.[1].weight").isEmpty());
     }
 
     @Test
@@ -217,6 +223,32 @@ class PetRestControllerTests {
         this.mockMvc.perform(delete("/api/pets/999")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testUpdatePetWeight() throws Exception {
+        given(this.clinicService.findPetById(4)).willReturn(petMapper.toPet(pets.get(1)));
+        PetDto newPet = pets.get(1);
+        newPet.setWeight(new BigDecimal("8.15"));
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        String newPetAsJSON = mapper.writeValueAsString(newPet);
+        this.mockMvc.perform(put("/api/pets/4")
+                .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().contentType("application/json"))
+            .andExpect(status().isNoContent());
+
+        this.mockMvc.perform(get("/api/pets/4")
+                .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$.id").value(4))
+            .andExpect(jsonPath("$.name").value("Jewel"))
+            .andExpect(jsonPath("$.weight").value(8.15));
     }
 
 }
