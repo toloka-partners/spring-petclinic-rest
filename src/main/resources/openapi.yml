@@ -1955,6 +1955,16 @@ components:
           example: '2010-09-07'
         type:
           $ref: '#/components/schemas/PetType'
+        weight:
+          title: Weight
+          description: The weight of the pet in kilograms.
+          type: number
+          format: double
+          minimum: 0
+          maximum: 999.99
+          example: 4.5
+          nullable: true
+          x-java-type: java.math.BigDecimal
       required:
         - name
         - birthDate
@@ -2165,3 +2175,4 @@ components:
           example: admin
       required:
         - name
+        

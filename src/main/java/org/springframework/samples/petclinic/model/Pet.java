@@ -18,11 +18,10 @@ package org.springframework.samples.petclinic.model;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
-
+import java.math.BigDecimal;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.*;
-
 
 /**
  * Simple business object representing a pet.
@@ -48,6 +47,8 @@ public class Pet extends NamedEntity {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
     private Set<Visit> visits;
+
+    private BigDecimal weight;
 
     public LocalDate getBirthDate() {
         return this.birthDate;
@@ -97,6 +98,14 @@ public class Pet extends NamedEntity {
     public void addVisit(Visit visit) {
         getVisitsInternal().add(visit);
         visit.setPet(this);
+    }
+
+    public BigDecimal getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
     }
 
 }
