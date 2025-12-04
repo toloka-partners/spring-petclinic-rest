@@ -23,6 +23,7 @@ import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * <p> Base class for {@link ClinicService} integration tests. </p> <p> Subclasses should specify Spring context
@@ -137,6 +139,7 @@ abstract class AbstractClinicServiceTests {
         Collection<PetType> types = this.clinicService.findPetTypes();
         pet.setType(EntityUtils.getById(types, PetType.class, 2));
         pet.setBirthDate(LocalDate.now());
+        pet.setWeight(new BigDecimal("7.51"));
         owner6.addPet(pet);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
@@ -147,6 +150,9 @@ abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
+
+        final Pet savedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(new BigDecimal("7.51")).isEqualTo(savedPet.getWeight());
     }
 
     @Test
@@ -499,6 +505,60 @@ abstract class AbstractClinicServiceTests {
                     actual -> actual.getName().equals(expected.getName())
                     && actual.getId().equals(expected.getId()))).isTrue();
         }
+    }
+
+
+    @Test
+    @Transactional
+    void shouldCreatePetWithNullWeight() {
+        final Owner owner3 = this.clinicService.findOwnerById(3);
+        int existingAmount = owner3.getPets().size();
+
+        final Pet newPet = new Pet();
+        newPet.setName("Lighty");
+        final Collection<PetType> types = this.clinicService.findPetTypes();
+        newPet.setType(EntityUtils.getById(types, PetType.class, 1));
+        newPet.setBirthDate(LocalDate.now());
+        newPet.setWeight(null);
+        owner3.addPet(newPet);
+
+        this.clinicService.savePet(newPet);
+        this.clinicService.saveOwner(owner3);
+
+        final Pet savedPet = this.clinicService.findPetById(newPet.getId());
+        assertThat(savedPet.getWeight()).isNull();
+        assertEquals(existingAmount + 1, owner3.getPets().size());
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdateExistingPetWeight() throws Exception {
+        Pet existingPet = this.clinicService.findPetById(1);
+
+        BigDecimal newWeight = new BigDecimal("101.23");
+        existingPet.setWeight(newWeight);
+        this.clinicService.savePet(existingPet);
+
+        final Pet petFromDB = this.clinicService.findPetById(1);
+        assertThat(petFromDB.getWeight()).isEqualTo(newWeight);
+    }
+
+    @Test
+    @Transactional
+    void shouldUpdatePetToNullWeight() throws Exception {
+        final Pet existingPet = this.clinicService.findPetById(1);
+        existingPet.setWeight(null);
+        this.clinicService.savePet(existingPet);
+
+        final Pet peetFromDB = this.clinicService.findPetById(1);
+        assertThat(peetFromDB.getWeight()).isNull();
+    }
+
+    @Test
+    void shouldFindPetWithWeight() {
+        final Pet existingPet = this.clinicService.findPetById(2);
+        assertThat(existingPet.getWeight()).isNotNull();
+        assertThat(existingPet.getWeight()).isGreaterThan(BigDecimal.ZERO);
     }
 
     void clearCache() {}

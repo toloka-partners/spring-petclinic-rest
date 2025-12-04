@@ -1953,6 +1953,11 @@ components:
           type: string
           format: date
           example: '2010-09-07'
+        weight:
+          title: Weight
+          description: The weight of the pet.
+          type: decimal
+          example: 4.5
         type:
           $ref: '#/components/schemas/PetType'
       required:
