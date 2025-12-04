@@ -17,6 +17,7 @@ package org.springframework.samples.petclinic.repository.jdbc;
 
 import org.springframework.jdbc.core.RowMapper;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -36,6 +37,7 @@ public class JdbcPetRowMapper implements RowMapper<JdbcPet> {
         pet.setBirthDate(rs.getObject("birth_date", LocalDate.class));
         pet.setTypeId(rs.getInt("type_id"));
         pet.setOwnerId(rs.getInt("owner_id"));
+        pet.setWeight(rs.getBigDecimal("weight"));
         return pet;
     }
 }
