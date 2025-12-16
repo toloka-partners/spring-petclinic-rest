@@ -43,7 +43,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -112,15 +111,13 @@ class OwnerRestControllerTests {
         pets.add(pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType)
-            .weight(new BigDecimal("12.50")));
+            .type(petType));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType)
-            .weight(new BigDecimal("7.25")));
+            .type(petType));
 
         visits = new ArrayList<>();
         VisitDto visit = new VisitDto();
@@ -141,7 +138,7 @@ class OwnerRestControllerTests {
     private PetDto getTestPetWithIdAndName(final OwnerDto owner, final int id, final String name) {
         PetTypeDto petType = new PetTypeDto();
         PetDto pet = new PetDto();
-        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).weight(new BigDecimal("10.00")).addVisitsItem(getTestVisitForPet(pet, 1));
+        pet.id(id).name(name).birthDate(LocalDate.now()).type(petType.id(2).name("dog")).addVisitsItem(getTestVisitForPet(pet, 1));
         return pet;
     }
 
@@ -356,7 +353,6 @@ class OwnerRestControllerTests {
     void testCreatePetSuccess() throws Exception {
         PetDto newPet = pets.get(0);
         newPet.setId(999);
-        newPet.setWeight(new BigDecimal("14.75"));
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -444,7 +440,6 @@ class OwnerRestControllerTests {
         PetDto updatedPetDto = pets.get(0);
         updatedPetDto.setName("Rex");
         updatedPetDto.setBirthDate(LocalDate.of(2020, 1, 15));
-        updatedPetDto.setWeight(new BigDecimal("18.50"));
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -486,7 +481,6 @@ class OwnerRestControllerTests {
         PetDto petDto = pets.get(0);
         petDto.setName("Ghost");
         petDto.setBirthDate(LocalDate.of(2020, 1, 1));
-        petDto.setWeight(new BigDecimal("22.00"));
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
