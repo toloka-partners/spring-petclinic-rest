@@ -119,9 +119,9 @@ public class JdbcPetTypeRepositoryImpl implements PetTypeRepository {
 		pettype_params.put("id", petType.getId());
 		List<Pet> pets = new ArrayList<Pet>();
 		pets = this.namedParameterJdbcTemplate.
-    			query("SELECT pets.id, name, birth_date, type_id, owner_id FROM pets WHERE type_id=:id",
-    			pettype_params,
-    			BeanPropertyRowMapper.newInstance(Pet.class));
+		  			query("SELECT pets.id, name, birth_date, type_id, owner_id, weight FROM pets WHERE type_id=:id",
+		  			pettype_params,
+		  			BeanPropertyRowMapper.newInstance(Pet.class));
 		// cascade delete pets
 		for (Pet pet : pets){
 			Map<String, Object> pet_params = new HashMap<>();
