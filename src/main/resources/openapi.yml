@@ -1955,6 +1955,13 @@ components:
           example: '2010-09-07'
         type:
           $ref: '#/components/schemas/PetType'
+        weight:
+          title: Weight
+          description: The weight of the pet in decimal format.
+          type: number
+          format: decimal
+          nullable: true
+          example: 15.75
       required:
         - name
         - birthDate
@@ -1989,6 +1996,13 @@ components:
               items:
                 $ref: '#/components/schemas/Visit'
               readOnly: true
+            weight:
+              title: Weight
+              description: The weight of the pet in decimal format.
+              type: number
+              format: decimal
+              nullable: true
+              example: 15.75
           required:
             - id
             - type
