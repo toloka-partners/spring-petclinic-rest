@@ -15,14 +15,10 @@
  */
 package org.springframework.samples.petclinic.model;
 
-import org.springframework.beans.support.MutableSortDefinition;
-import org.springframework.beans.support.PropertyComparator;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
-
 
 /**
  * Simple business object representing a pet.
@@ -37,6 +33,9 @@ public class Pet extends NamedEntity {
 
     @Column(name = "birth_date", columnDefinition = "DATE")
     private LocalDate birthDate;
+
+    @Column(name = "weight")
+    private BigDecimal weight;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "type_id")
@@ -55,6 +54,14 @@ public class Pet extends NamedEntity {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public BigDecimal getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
     }
 
     public PetType getType() {
@@ -86,7 +93,7 @@ public class Pet extends NamedEntity {
 
     public List<Visit> getVisits() {
         List<Visit> sortedVisits = new ArrayList<>(getVisitsInternal());
-        PropertyComparator.sort(sortedVisits, new MutableSortDefinition("date", false, false));
+        sortedVisits.sort((v1, v2) -> v1.getDate().compareTo(v2.getDate()));
         return Collections.unmodifiableList(sortedVisits);
     }
 
