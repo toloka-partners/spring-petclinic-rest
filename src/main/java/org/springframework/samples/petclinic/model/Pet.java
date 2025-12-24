@@ -38,6 +38,9 @@ public class Pet extends NamedEntity {
     @Column(name = "birth_date", columnDefinition = "DATE")
     private LocalDate birthDate;
 
+    @Column(name = "weight")
+    private java.math.BigDecimal weight;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "type_id")
     private PetType type;
@@ -55,6 +58,14 @@ public class Pet extends NamedEntity {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public java.math.BigDecimal getWeight() {
+        return this.weight;
+    }
+
+    public void setWeight(java.math.BigDecimal weight) {
+        this.weight = weight;
     }
 
     public PetType getType() {
