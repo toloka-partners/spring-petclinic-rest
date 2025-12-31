@@ -80,9 +80,7 @@ public class PetRestController implements PetsApi {
         }
         currentPet.setBirthDate(petDto.getBirthDate());
         currentPet.setName(petDto.getName());
-        if (petDto.getWeight() != null) {
-            currentPet.setWeight(BigDecimal.valueOf(petDto.getWeight()));
-        }
+        currentPet.setWeight(BigDecimal.valueOf(petDto.getWeight()));
         currentPet.setType(petMapper.toPetType(petDto.getType()));
         this.clinicService.savePet(currentPet);
         return new ResponseEntity<>(petMapper.toPetDto(currentPet), HttpStatus.NO_CONTENT);
