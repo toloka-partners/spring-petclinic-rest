@@ -31,6 +31,7 @@ import org.springframework.samples.petclinic.model.Owner;
 import org.springframework.samples.petclinic.rest.advice.ExceptionControllerAdvice;
 import org.springframework.samples.petclinic.rest.dto.OwnerDto;
 import org.springframework.samples.petclinic.rest.dto.PetDto;
+import org.springframework.samples.petclinic.rest.dto.PetFieldsDto;
 import org.springframework.samples.petclinic.rest.dto.PetTypeDto;
 import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import org.springframework.samples.petclinic.service.ClinicService;
@@ -437,14 +438,18 @@ class OwnerRestControllerTests {
         int petId = pets.get(0).getId();
         given(this.clinicService.findOwnerById(ownerId)).willReturn(ownerMapper.toOwner(owners.get(0)));
         given(this.clinicService.findPetById(petId)).willReturn(petMapper.toPet(pets.get(0)));
-        PetDto updatedPetDto = pets.get(0);
-        updatedPetDto.setName("Rex");
-        updatedPetDto.setBirthDate(LocalDate.of(2020, 1, 15));
+        PetTypeDto petType = new PetTypeDto();
+        petType.id(2).name("dog");
+        PetFieldsDto updatedPetFieldsDto = new PetFieldsDto();
+        updatedPetFieldsDto.setName("Rex");
+        updatedPetFieldsDto.setBirthDate(LocalDate.of(2020, 1, 15));
+        updatedPetFieldsDto.setWeight(25.0);
+        updatedPetFieldsDto.setType(petType);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        String updatedPetAsJSON = mapper.writeValueAsString(updatedPetDto);
+        String updatedPetAsJSON = mapper.writeValueAsString(updatedPetFieldsDto);
         this.mockMvc.perform(put("/api/owners/" + ownerId + "/pets/" + petId)
                 .content(updatedPetAsJSON)
                 .accept(MediaType.APPLICATION_JSON_VALUE)

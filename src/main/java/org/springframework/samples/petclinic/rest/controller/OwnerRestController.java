@@ -36,6 +36,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.transaction.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 
@@ -156,6 +157,11 @@ public class OwnerRestController implements OwnersApi {
             if (currentPet != null) {
                 currentPet.setBirthDate(petFieldsDto.getBirthDate());
                 currentPet.setName(petFieldsDto.getName());
+                if (petFieldsDto.getWeight() != null) {
+                    currentPet.setWeight(BigDecimal.valueOf(petFieldsDto.getWeight()));
+                } else {
+                    currentPet.setWeight(null);
+                }
                 currentPet.setType(petMapper.toPetType(petFieldsDto.getType()));
                 this.clinicService.savePet(currentPet);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
