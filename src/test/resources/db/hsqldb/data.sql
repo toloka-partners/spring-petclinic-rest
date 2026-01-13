@@ -33,28 +33,27 @@ INSERT INTO owners VALUES (8, 'Maria', 'Escobito', '345 Maple St.', 'Madison', '
 INSERT INTO owners VALUES (9, 'David', 'Schroeder', '2749 Blackhawk Trail', 'Madison', '6085559435');
 INSERT INTO owners VALUES (10, 'Carlos', 'Estaban', '2335 Independence La.', 'Waunakee', '6085555487');
 
-INSERT INTO pets VALUES (1, 'Leo', '2010-09-07', 1, 1, 4.5);
-INSERT INTO pets VALUES (2, 'Basil', '2012-08-06', 6, 2, 0.8);
-INSERT INTO pets VALUES (3, 'Rosy', '2011-04-17', 2, 3, 25.3);
-INSERT INTO pets VALUES (4, 'Jewel', '2010-03-07', 2, 3, 22.7);
-INSERT INTO pets VALUES (5, 'Iggy', '2010-11-30', 3, 4, 1.2);
-INSERT INTO pets VALUES (6, 'George', '2010-01-20', 4, 5, 0.5);
-INSERT INTO pets VALUES (7, 'Samantha', '2012-09-04', 1, 6, 3.8);
-INSERT INTO pets VALUES (8, 'Max', '2012-09-04', 1, 6, 4.2);
-INSERT INTO pets VALUES (9, 'Lucky', '2011-08-06', 5, 7, 0.3);
-INSERT INTO pets VALUES (10, 'Mulligan', '2007-02-24', 2, 8, 18.9);
-INSERT INTO pets VALUES (11, 'Freddy', '2010-03-09', 5, 9, 0.4);
-INSERT INTO pets VALUES (12, 'Lucky', '2010-06-24', 2, 10, 15.6);
-INSERT INTO pets VALUES (13, 'Sly', '2012-06-08', 1, 10, 3.9);
+INSERT INTO pets VALUES (1, 'Leo', '2010-09-07', 1, 1, 4.50);
+INSERT INTO pets VALUES (2, 'Basil', '2012-08-06', 6, 2, 0.80);
+INSERT INTO pets VALUES (3, 'Rosy', '2011-04-17', 2, 3, 12.30);
+INSERT INTO pets VALUES (4, 'Jewel', '2010-03-07', 2, 3, NULL);
+INSERT INTO pets VALUES (5, 'Iggy', '2010-11-30', 3, 4, 2.20);
+INSERT INTO pets VALUES (6, 'George', '2010-01-20', 4, 5, 1.80);
+INSERT INTO pets VALUES (7, 'Samantha', '2012-09-04', 1, 6, 3.90);
+INSERT INTO pets VALUES (8, 'Max', '2012-09-04', 1, 6, 4.10);
+INSERT INTO pets VALUES (9, 'Lucky', '2011-08-06', 5, 7, 0.65);
+INSERT INTO pets VALUES (10, 'Mulligan', '2007-02-24', 2, 8, 22.50);
+INSERT INTO pets VALUES (11, 'Freddy', '2010-03-09', 5, 9, 0.45);
+INSERT INTO pets VALUES (12, 'Lucky', '2010-06-24', 2, 10, 18.20);
+INSERT INTO pets VALUES (13, 'Sly', '2012-06-08', 1, 10, NULL);
 
 INSERT INTO visits VALUES (1, 7, '2013-01-01', 'rabies shot');
 INSERT INTO visits VALUES (2, 8, '2013-01-02', 'rabies shot');
 INSERT INTO visits VALUES (3, 8, '2013-01-03', 'neutered');
 INSERT INTO visits VALUES (4, 7, '2013-01-04', 'spayed');
 
-INSERT INTO users(username, password, enabled) VALUES
-('admin', '$2a$10$ymaklWBnpBKlgdMgkjWVF.GMGyvH8aDuTK.glFOaKw712LHtRRymS', TRUE);
+INSERT INTO users VALUES ('admin','admin',TRUE);
 
-INSERT INTO roles (username, role) VALUES ('admin', 'ROLE_OWNER_ADMIN');
-INSERT INTO roles (username, role) VALUES ('admin', 'ROLE_VET_ADMIN');
-INSERT INTO roles (username, role) VALUES ('admin', 'ROLE_ADMIN');
+INSERT INTO roles VALUES (1,'admin','OWNER_ADMIN');
+INSERT INTO roles VALUES (2,'admin','VET_ADMIN');
+INSERT INTO roles VALUES (3,'admin','ADMIN');
