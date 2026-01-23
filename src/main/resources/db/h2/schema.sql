@@ -72,3 +72,5 @@ CREATE TABLE IF NOT EXISTS roles (
   UNIQUE (role, username),
   FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
 );
+
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS weight DOUBLE;

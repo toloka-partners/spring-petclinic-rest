@@ -70,3 +70,5 @@ CREATE TABLE IF NOT EXISTS roles (
   KEY fk_username_idx (username),
   CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users (username)
 ) engine=InnoDB;
+
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS weight DOUBLE PRECISION;
