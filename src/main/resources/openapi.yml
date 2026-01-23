@@ -1955,6 +1955,13 @@ components:
           example: '2010-09-07'
         type:
           $ref: '#/components/schemas/PetType'
+        weight:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0.0
+          example: 15.75
+          description: "The weight of the pet in kilograms. Must be greater than 0. Can be null if not recorded."
       required:
         - name
         - birthDate
