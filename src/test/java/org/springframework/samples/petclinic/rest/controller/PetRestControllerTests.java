@@ -94,15 +94,13 @@ class PetRestControllerTests {
         pets.add(pet.id(3)
             .name("Rosy")
             .birthDate(LocalDate.now())
-            .type(petType)
-            .weight(15.75));
+            .type(petType));
 
         pet = new PetDto();
         pets.add(pet.id(4)
             .name("Jewel")
             .birthDate(LocalDate.now())
-            .type(petType)
-            .weight(8.25));
+            .type(petType));
     }
 
     @Test
@@ -114,8 +112,7 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy"))
-            .andExpect(jsonPath("$.weight").value(15.75));
+            .andExpect(jsonPath("$.name").value("Rosy"));
     }
 
     @Test
@@ -140,10 +137,8 @@ class PetRestControllerTests {
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.[0].id").value(3))
             .andExpect(jsonPath("$.[0].name").value("Rosy"))
-            .andExpect(jsonPath("$.[0].weight").value(15.75))
             .andExpect(jsonPath("$.[1].id").value(4))
-            .andExpect(jsonPath("$.[1].name").value("Jewel"))
-            .andExpect(jsonPath("$.[1].weight").value(8.25));
+            .andExpect(jsonPath("$.[1].name").value("Jewel"));
     }
 
     @Test
@@ -162,7 +157,6 @@ class PetRestControllerTests {
         given(this.clinicService.findPetById(3)).willReturn(petMapper.toPet(pets.get(0)));
         PetDto newPet = pets.get(0);
         newPet.setName("Rosy I");
-        newPet.setWeight(18.50);
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -179,8 +173,7 @@ class PetRestControllerTests {
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
             .andExpect(jsonPath("$.id").value(3))
-            .andExpect(jsonPath("$.name").value("Rosy I"))
-            .andExpect(jsonPath("$.weight").value(18.50));
+            .andExpect(jsonPath("$.name").value("Rosy I"));
 
     }
 
