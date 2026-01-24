@@ -1957,7 +1957,7 @@ components:
           title: Weight
           description: The weight of the pet in kilograms.
           type: number
-          format: decimal
+          format: double
           minimum: 0
           maximum: 999.99
           example: 15.75

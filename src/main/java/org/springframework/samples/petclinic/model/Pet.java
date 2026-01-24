@@ -39,8 +39,8 @@ public class Pet extends NamedEntity {
     @Column(name = "birth_date", columnDefinition = "DATE")
     private LocalDate birthDate;
 
-    @Column(name = "weight", precision = 5, scale = 2)
-    private BigDecimal weight;
+    @Column(name = "weight")
+    private Double weight;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "type_id")
@@ -61,11 +61,11 @@ public class Pet extends NamedEntity {
         this.birthDate = birthDate;
     }
 
-    public BigDecimal getWeight() {
+    public Double getWeight() {
         return this.weight;
     }
 
-    public void setWeight(BigDecimal weight) {
+    public void setWeight(Double weight) {
         this.weight = weight;
     }
 
