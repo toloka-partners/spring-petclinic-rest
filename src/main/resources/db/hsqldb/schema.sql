@@ -80,3 +80,5 @@ CREATE TABLE roles (
 ALTER TABLE roles ADD CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users (username);
 CREATE INDEX fk_username_idx ON roles (username);
 
+ALTER TABLE pets ADD COLUMN weight DOUBLE;
+

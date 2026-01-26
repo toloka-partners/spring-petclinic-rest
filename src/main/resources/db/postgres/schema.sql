@@ -65,3 +65,5 @@ CREATE TABLE IF NOT EXISTS roles (
   FOREIGN KEY (username) REFERENCES users (username),
   CONSTRAINT uni_username_role UNIQUE (role, username)
 );
+
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS weight DOUBLE PRECISION;
