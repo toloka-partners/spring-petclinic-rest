@@ -20,6 +20,7 @@ import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -48,6 +49,9 @@ public class Pet extends NamedEntity {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
     private Set<Visit> visits;
+
+    @Column(name = "weight", nullable = true)
+    private Double weight;
 
     public LocalDate getBirthDate() {
         return this.birthDate;
@@ -99,4 +103,11 @@ public class Pet extends NamedEntity {
         visit.setPet(this);
     }
 
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
 }
