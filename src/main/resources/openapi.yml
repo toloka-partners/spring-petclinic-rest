@@ -1953,6 +1953,13 @@ components:
           type: string
           format: date
           example: '2010-09-07'
+        weight:
+          title: Weight
+          description: The weight of the pet in kg.
+          type: number
+          format: double
+          minimum: 0
+          example: 15.75
         type:
           $ref: '#/components/schemas/PetType'
       required:
