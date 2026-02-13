@@ -113,7 +113,7 @@ abstract class AbstractClinicServiceTests {
         Pet pet7 = this.clinicService.findPetById(7);
         assertThat(pet7.getName()).startsWith("Samantha");
         assertThat(pet7.getOwner().getFirstName()).isEqualTo("Jean");
-
+        assertThat(pet7.getWeight()).isNotNull();
     }
 
 //    @Test
@@ -137,6 +137,7 @@ abstract class AbstractClinicServiceTests {
         Collection<PetType> types = this.clinicService.findPetTypes();
         pet.setType(EntityUtils.getById(types, PetType.class, 2));
         pet.setBirthDate(LocalDate.now());
+        pet.setWeight(22.3);
         owner6.addPet(pet);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
@@ -147,6 +148,9 @@ abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
+        // checks that weight was persisted
+        Pet savedPet = this.clinicService.findPetById(pet.getId());
+        assertThat(savedPet.getWeight()).isEqualTo(22.3);
     }
 
     @Test
