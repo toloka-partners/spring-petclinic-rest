@@ -138,6 +138,53 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
         params.put("id", visit.getId());
         this.namedParameterJdbcTemplate.update("DELETE FROM visits WHERE id=:id", params);
     }
+    
+    @Override
+    public Collection<Visit> findAllWithPet() throws DataAccessException {
+        // For JDBC, we'll use the same method as findAll since it already joins with pets
+        // But we need to optimize it to fetch all related data in one query
+        String sql = "SELECT v.id as visit_id, v.visit_date, v.description, " +
+                     "p.id as pet_id, p.name as pet_name, p.birth_date as pet_birth_date, " +
+                     "pt.id as type_id, pt.name as type_name, " +
+                     "o.id as owner_id, o.first_name, o.last_name, o.address, o.city, o.telephone " +
+                     "FROM visits v " +
+                     "LEFT JOIN pets p ON v.pet_id = p.id " +
+                     "LEFT JOIN types pt ON p.type_id = pt.id " +
+                     "LEFT JOIN owners o ON p.owner_id = o.id";
+        
+        return this.namedParameterJdbcTemplate.query(sql, new HashMap<>(), (rs, rowNum) -> {
+            Visit visit = new Visit();
+            visit.setId(rs.getInt("visit_id"));
+            Date visitDate = rs.getDate("visit_date");
+            visit.setDate(new java.sql.Date(visitDate.getTime()).toLocalDate());
+            visit.setDescription(rs.getString("description"));
+            
+            JdbcPet pet = new JdbcPet();
+            pet.setId(rs.getInt("pet_id"));
+            pet.setName(rs.getString("pet_name"));
+            Date birthDate = rs.getDate("pet_birth_date");
+            if (birthDate != null) {
+                pet.setBirthDate(new java.sql.Date(birthDate.getTime()).toLocalDate());
+            }
+            
+            PetType petType = new PetType();
+            petType.setId(rs.getInt("type_id"));
+            petType.setName(rs.getString("type_name"));
+            pet.setType(petType);
+            
+            Owner owner = new Owner();
+            owner.setId(rs.getInt("owner_id"));
+            owner.setFirstName(rs.getString("first_name"));
+            owner.setLastName(rs.getString("last_name"));
+            owner.setAddress(rs.getString("address"));
+            owner.setCity(rs.getString("city"));
+            owner.setTelephone(rs.getString("telephone"));
+            pet.setOwner(owner);
+            
+            visit.setPet(pet);
+            return visit;
+        });
+    }
 
     protected class JdbcVisitRowMapperExt implements RowMapper<Visit> {
 

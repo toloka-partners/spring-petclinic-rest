@@ -73,34 +73,40 @@ public class JdbcVetRepositoryImpl implements VetRepository {
      */
     @Override
     public Collection<Vet> findAll() throws DataAccessException {
-        List<Vet> vets = new ArrayList<>();
-        // Retrieve the list of all vets.
-        vets.addAll(this.jdbcTemplate.query(
-            "SELECT id, first_name, last_name FROM vets ORDER BY last_name,first_name",
-            BeanPropertyRowMapper.newInstance(Vet.class)));
-
-        // Retrieve the list of all possible specialties.
-        final List<Specialty> specialties = this.jdbcTemplate.query(
-            "SELECT id, name FROM specialties",
-            BeanPropertyRowMapper.newInstance(Specialty.class));
-
-        // Build each vet's list of specialties.
-        for (Vet vet : vets) {
-            final List<Integer> vetSpecialtiesIds = this.jdbcTemplate.query(
-                "SELECT specialty_id FROM vet_specialties WHERE vet_id=?",
-                new BeanPropertyRowMapper<Integer>() {
-                    @Override
-                    public Integer mapRow(ResultSet rs, int row) throws SQLException {
-                        return rs.getInt(1);
-                    }
-                },
-                vet.getId());
-            for (int specialtyId : vetSpecialtiesIds) {
-                Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
-                vet.addSpecialty(specialty);
+        // Use a single query with joins to fetch all data at once
+        String sql = "SELECT v.id as vet_id, v.first_name, v.last_name, " +
+                     "s.id as specialty_id, s.name as specialty_name " +
+                     "FROM vets v " +
+                     "LEFT JOIN vet_specialties vs ON v.id = vs.vet_id " +
+                     "LEFT JOIN specialties s ON vs.specialty_id = s.id " +
+                     "ORDER BY v.last_name, v.first_name, s.name";
+        
+        Map<Integer, Vet> vetMap = new HashMap<>();
+        
+        this.jdbcTemplate.query(sql, (ResultSet rs) -> {
+            int vetId = rs.getInt("vet_id");
+            Vet vet = vetMap.get(vetId);
+            if (vet == null) {
+                vet = new Vet();
+                vet.setId(vetId);
+                vet.setFirstName(rs.getString("first_name"));
+                vet.setLastName(rs.getString("last_name"));
+                vetMap.put(vetId, vet);
             }
-        }
-        return vets;
+            
+            int specialtyId = rs.getInt("specialty_id");
+            if (specialtyId > 0) { // Check for null specialty
+                String specialtyName = rs.getString("specialty_name");
+                if (specialtyName != null) {
+                    Specialty specialty = new Specialty();
+                    specialty.setId(specialtyId);
+                    specialty.setName(specialtyName);
+                    vet.addSpecialty(specialty);
+                }
+            }
+        });
+        
+        return new ArrayList<>(vetMap.values());
     }
     
 	@Override

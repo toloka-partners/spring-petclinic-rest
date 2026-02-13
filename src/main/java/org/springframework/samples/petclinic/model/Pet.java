@@ -18,6 +18,7 @@ package org.springframework.samples.petclinic.model;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.hibernate.annotations.BatchSize;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ import java.util.*;
  */
 @Entity
 @Table(name = "pets")
+@NamedEntityGraph(name = "Pet.visits", attributeNodes = @NamedAttributeNode("visits"))
 public class Pet extends NamedEntity {
 
     @Column(name = "birth_date", columnDefinition = "DATE")
@@ -46,7 +48,8 @@ public class Pet extends NamedEntity {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     private Set<Visit> visits;
 
     public LocalDate getBirthDate() {
