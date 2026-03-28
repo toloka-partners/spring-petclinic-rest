@@ -29,6 +29,9 @@ import org.springframework.samples.petclinic.repository.OwnerRepository;
  *
  * @author Michael Isvy
  * @since 15.1.2013
+ * 
+ * Note: This repository includes optimized queries using JOIN FETCH to prevent
+ * N+1 select problems when loading owners with their associated pets.
  */
 
 @Profile("spring-data-jpa")
@@ -41,4 +44,8 @@ public interface SpringDataOwnerRepository extends OwnerRepository, Repository<O
     @Override
     @Query("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id")
     Owner findById(@Param("id") int id);
+    
+    @Override
+    @Query("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets")
+    Collection<Owner> findAll();
 }
