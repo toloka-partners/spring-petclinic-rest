@@ -23,9 +23,11 @@ public interface PetMapper {
 
     Collection<Pet> toPets(Collection<PetDto> pets);
 
+    @Mapping(source = "weight", target = "weight")
     @Mapping(source = "ownerId", target = "owner.id")
     Pet toPet(PetDto petDto);
 
+    @Mapping(source = "weight", target = "weight")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "owner", ignore = true)
     @Mapping(target = "visits", ignore = true)
